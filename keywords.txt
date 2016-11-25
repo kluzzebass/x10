@@ -12,8 +12,8 @@ X10_Config KEYWORD1
 # Methods and Functions 
 #######################################	
 
-init	KEYWORD2
-tick	KEYWORD2
+begin	KEYWORD2
+loop	KEYWORD2
 
 #######################################
 # Constants

@@ -3,15 +3,29 @@
 #define X10_CONFIG_H
 
 #include <Arduino.h>
+#include <Adafruit_NeoMatrix.h>
+#include <SPI.h>
+#include <SdFat.h>
+
 
 class X10_Config
 {
 public:
-	int stripPin;
-	int csPin;
+	// For OTA updates
+	int otaPort;
+
+	// For the Adafruit_NeoMatrix library
+	int matrixPin;
 	int width;
 	int height;
-	int otaPort;
+	int matrixLayout;
+	int pixelType;
+	int maxBrightness;
+
+	// For the SdFat library
+	int csPin;
+	int spiSpeed;
+
 	
 	X10_Config();
 };
