@@ -6,17 +6,17 @@
 #######################################
 
 X10	KEYWORD1
-X10::Config KEYWORD1
+X10_Config KEYWORD1
 
 #######################################
 # Methods and Functions 
 #######################################	
 
-setup	KEYWORD2
-handle
+init	KEYWORD2
+tick	KEYWORD2
 
 #######################################
 # Constants
 #######################################
  
-SOMETHING			LITERAL1
+X10::something	LITERAL1
