@@ -9,14 +9,13 @@ class X10_Base
 {
 public:
 
-	X10_Base(X10_Config &, ArduinoOutStream &);
+	X10_Base(X10_Config &);
 
 	virtual void begin() = 0;
 	virtual void loop() = 0;
 
 protected:
 	X10_Config &cfg;
-	ArduinoOutStream &cout;
 
 };
 

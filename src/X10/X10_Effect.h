@@ -13,7 +13,7 @@ class X10_Effect : public X10_Base
 {
 public:
 
-	X10_Effect(X10_Config &, ArduinoOutStream &, Adafruit_NeoMatrix &, SdFat &);
+	X10_Effect(X10_Config &, Adafruit_NeoMatrix &, SdFat &);
 
 protected:
 	Adafruit_NeoMatrix &matrix;
