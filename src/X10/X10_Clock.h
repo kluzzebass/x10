@@ -8,7 +8,7 @@ class X10_Clock : public X10_Effect
 {
 public:
 
-	X10_Clock(X10_Config &cfg, ArduinoOutStream &cout, Adafruit_NeoMatrix &matrix, SdFat &sd);
+	X10_Clock(X10_Config &, ArduinoOutStream &, Adafruit_NeoMatrix &, SdFat &);
 
 	void begin();
 	void loop();

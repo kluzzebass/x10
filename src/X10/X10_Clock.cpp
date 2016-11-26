@@ -2,8 +2,8 @@
 #include <X10/X10_Clock.h>
 
 
-X10_Clock::X10_Clock(X10_Config &cfg, ArduinoOutStream &cout, Adafruit_NeoMatrix &matrix, SdFat &sd) : 
-	X10_Effect(cfg, cout, matrix, sd)
+X10_Clock::X10_Clock(X10_Config &cfg, ArduinoOutStream &cout, Adafruit_NeoMatrix &matrix, SdFat &sd)
+	: X10_Effect(cfg, cout, matrix, sd)
 {
 }
 

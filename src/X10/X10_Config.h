@@ -24,7 +24,6 @@ public:
 	// For the SdFat library
 	int csPin;
 	int spiSpeed;
-
 	
 	X10_Config();
 };

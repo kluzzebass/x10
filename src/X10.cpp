@@ -2,7 +2,8 @@
 #include <X10.h>
 
 
-X10::X10(X10_Config &cfg, ArduinoOutStream &cout) : X10_Base(cfg, cout)
+X10::X10(X10_Config &cfg, ArduinoOutStream &cout)
+	: X10_Base(cfg, cout)
 {
 }
 

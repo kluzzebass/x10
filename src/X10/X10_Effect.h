@@ -15,9 +15,6 @@ public:
 
 	X10_Effect(X10_Config &, ArduinoOutStream &, Adafruit_NeoMatrix &, SdFat &);
 
-	virtual void begin() = 0;
-	virtual void loop() = 0;
-
 protected:
 	Adafruit_NeoMatrix &matrix;
 	SdFat &sd;
