@@ -2,20 +2,25 @@
 #ifndef X10_EFFECT_H
 #define X10_EFFECT_H
 
-#include <X10.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_NeoPixel.h>
+#include <Adafruit_NeoMatrix.h>
+#include <SdFat.h>
 
-class X10_Effect
+#include <X10/X10_Base.h>
+
+class X10_Effect : public X10_Base
 {
 public:
 
-	X10_Effect(X10_Config &cfg, ArduinoOutStream &cout);
+	X10_Effect(X10_Config &, ArduinoOutStream &, Adafruit_NeoMatrix &, SdFat &);
 
 	virtual void begin() = 0;
 	virtual void loop() = 0;
 
 protected:
-	X10_Config &cfg;
-	ArduinoOutStream &cout;
+	Adafruit_NeoMatrix &matrix;
+	SdFat &sd;
 };
 
 #endif /* X10_EFFECT_H */

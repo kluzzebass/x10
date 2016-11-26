@@ -2,34 +2,36 @@
 #ifndef X10_H
 #define X10_H
 
-#include <Adafruit_GFX.h>
-#include <Adafruit_NeoPixel.h>
+#include <Arduino.h>
+#include <Adafruit_NeoMatrix.h>
+#include <SPI.h>
+#include <SdFat.h>
 
 #include <X10/X10_Config.h>
+#include <X10/X10_Base.h>
 #include <X10/X10_Effect.h>
 #include <X10/X10_Clock.h>
 
 
 
-class X10
+class X10 : public X10_Base
 {
 public:
 
-	X10(X10_Config &cfg, ArduinoOutStream &cout);
+	X10(X10_Config &, ArduinoOutStream &);
 
 	void begin();
 	void loop();
 
 protected:
-	X10_Config &cfg;
-	ArduinoOutStream &cout;
-	Adafruit_NeoMatrix *matrix;
-	SdFat *sd;
 
 	void beginMatrix();
 	void beginSdFat();
 
+	Adafruit_NeoMatrix *matrix;
+	SdFat *sd;
 
+	X10_Clock *clock;
 };
 
 #endif /* X10_H */

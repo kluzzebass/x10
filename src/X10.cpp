@@ -2,7 +2,7 @@
 #include <X10.h>
 
 
-X10::X10(X10_Config &cfg, ArduinoOutStream &cout) : cfg(cfg), cout(cout)
+X10::X10(X10_Config &cfg, ArduinoOutStream &cout) : X10_Base(cfg, cout)
 {
 }
 
@@ -11,12 +11,16 @@ void X10::begin()
 	cout << endl << "Starting X10 initialization." << endl;
 	beginMatrix();
 	beginSdFat();
+
+	clock = new X10_Clock(cfg, cout, *matrix, *sd);
 }
 
 void X10::loop()
 {
 
 }
+
+// https://github.com/adafruit/Adafruit_NeoMatrix
 
 void X10::beginMatrix()
 {
@@ -36,6 +40,5 @@ void X10::beginSdFat()
 	}
 
 	cout << F("SD card initialized.") << endl;
-
 }
 

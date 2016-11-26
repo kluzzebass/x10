@@ -7,7 +7,6 @@
 #include <SPI.h>
 #include <SdFat.h>
 
-
 class X10_Config
 {
 public:
