@@ -26,7 +26,7 @@ public:
 	int height = 16;
 	int matrixLayout = NEO_MATRIX_BOTTOM + NEO_MATRIX_LEFT + NEO_MATRIX_ROWS + NEO_MATRIX_ZIGZAG;;
 	int pixelType = NEO_GRB + NEO_KHZ800;
-	int maxBrightness = 100;
+	int maxBrightness = 25;
 
 	// For the SdFat library
 	int csPin = D8;
