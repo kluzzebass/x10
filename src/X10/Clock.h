@@ -13,8 +13,8 @@ class X10_Clock : public X10_Effect
 {
 public:
 
-	X10_Clock(CRGB *leds)
-		: X10_Effect(leds) {}
+	X10_Clock(CRGB *leds, RtcDS1307<TwoWire> &rtc)
+		: X10_Effect(leds), rtc(rtc) {}
 
 	void begin();
 	void loop();
@@ -24,7 +24,16 @@ protected:
 	void drawDigit(uint, uint, uint);
 	void drawSeconds(uint);
 
-	unsigned long tick = 0;
+	RtcDS1307<TwoWire> &rtc;
+
+	uint seconds;
+	uint minutesLo; 
+	uint minutesHi; 
+	uint hoursLo;
+	uint hoursHi;
+
+	unsigned long clTick = 0;
+	unsigned long fxTick = 0;
 	uint16_t sequencePosition = 0;
 
 	uint8_t font[10][10] = {

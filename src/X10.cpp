@@ -5,9 +5,10 @@ void X10::begin()
 {
 	s.println(F("\n\nStarting X10 initialization."));
 	beginMatrix(0);
+	beginRTC(1);
 //	beginWifi(2);
 
-	clock = new X10_Clock(leds);
+	clock = new X10_Clock(leds, rtc);
 	ledTest = new X10_LEDTest(leds);
 	colorCycle = new X10_ColorCycle(leds);
 	wibbleWobble = new X10_WibbleWobble(leds);
@@ -23,13 +24,16 @@ void X10::begin()
 
 }
 
+#define countof(a) (sizeof(a) / sizeof(a[0]))
+
 void X10::loop()
 {
-
-	// clock->loop();
+	
+	clock->loop();
 	// ledTest->loop();
 	// colorCycle->loop();
-	wibbleWobble->loop();
+	// wibbleWobble->loop();
+
 }
 
 void X10::bootStatus(int x, uint8_t r, uint8_t g, uint8_t b)
@@ -42,15 +46,41 @@ void X10::bootStatus(int x, uint8_t r, uint8_t g, uint8_t b)
 // https://github.com/adafruit/Adafruit_NeoMatrix
 void X10::beginMatrix(int x)
 {
-	s.print(F("Initializing matrix..."));
+	s.println(F("Matrix: Initializing..."));
 
 	FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS);
 	FastLED.setBrightness(MAX_BRIGHTNESS);
 
-	s.println(F(" done."));
+	s.println(F("Matrix: Done."));
 	bootStatus(x, 0, 100, 0);
 }
 
+void X10::beginRTC(int x)
+{
+	s.println(F("RTC: Initializing..."));
+
+    rtc.Begin();
+
+	// If RTC is invalid, set the time to compile time.
+	RtcDateTime compiled = RtcDateTime(__DATE__, __TIME__);
+
+	if (!rtc.IsDateTimeValid()) 
+    {
+        s.println("RTC: Invalid time, setting clock to compile time.");
+        rtc.SetDateTime(compiled);
+    }
+
+    if (!rtc.GetIsRunning())
+    {
+        Serial.println("RTC: Not actively running, starting now.");
+        rtc.SetIsRunning(true);
+	}
+
+	rtc.SetSquareWavePin(DS1307SquareWaveOut_Low);
+
+	s.println(F("RTC: Done."));
+	bootStatus(x, 0, 100, 0);
+}
 
 void X10::beginWifi(int x)
 {

@@ -9,28 +9,37 @@ void X10_Clock::loop()
 {
 	unsigned long now = millis();
 
-	if (now >= (tick + 10))
+	if (now >= (fxTick + 10))
 	{
-		// clear();
 		fill(CRGB(255, 255, 0));
-
-		uint seconds = now / 1000;
-		uint minutesLo = seconds / 60 % 10; 
-		uint minutesHi = seconds / 600 % 10; 
-		uint hoursLo = seconds / 60 / 60 % 10;
-		uint hoursHi = seconds / 60 / 600 % 10;
-
+	
 		drawDigit(hoursHi, 0, 3);
 		drawDigit(hoursLo, 4, 3);
 		drawDigit(minutesHi, 9, 3);
 		drawDigit(minutesLo, 13, 3);
-
-		drawSeconds(seconds % 60);
-
-		tick = now;
-		sequencePosition++;
+		drawSeconds(seconds);
+	
 		FastLED.show();
+	
+		sequencePosition++;
+		fxTick = now;
 	}
+
+	// Grab the time from the RTC twice every second
+	// Each RTC call takes just over 1ms.
+	if (now >= (clTick + 500))
+	{
+		RtcDateTime dt = rtc.GetDateTime();
+
+		seconds = dt.Second();
+		minutesLo = dt.Minute() % 10; 
+		minutesHi = dt.Minute() / 10;
+		hoursLo = dt.Hour() % 10;
+		hoursHi = dt.Hour() / 10;
+		
+		clTick = now;
+	}
+
 }
 
 bool X10_Clock::hiLite(uint digit, uint x, uint y)

@@ -14,6 +14,8 @@
 #include <WiFiManager.h>
 #include <ESP8266mDNS.h>
 #include <WiFiUdp.h>
+#include <Wire.h>
+#include <RtcDS1307.h>
 
 #define s Serial
 
