@@ -1,12 +1,12 @@
 
-#include <X10/X10_Effect.h>
+#include <X10/Effect.h>
 
 
 class X10_ColorCycle : public X10_Effect
 {
 public:
-	X10_ColorCycle(X10_Config &cfg, Adafruit_NeoMatrix *matrix, SdFat *sd)
-		: X10_Effect(cfg, matrix, sd) {}
+	X10_ColorCycle(CRGB *leds)
+		: X10_Effect(leds) {}
 
 	void begin();
 	void loop();

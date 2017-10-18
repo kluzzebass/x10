@@ -2,7 +2,7 @@
 #ifndef X10_CLOCK_H
 #define X10_CLOCK_H
 
-#include <X10/X10_Effect.h>
+#include <X10/Effect.h>
 
 #define X10_CLOCK_FONT_WIDTH 3
 #define X10_CLOCK_FONT_HEIGHT 10
@@ -13,8 +13,8 @@ class X10_Clock : public X10_Effect
 {
 public:
 
-	X10_Clock(X10_Config &cfg, Adafruit_NeoMatrix *matrix, SdFat *sd)
-		: X10_Effect(cfg, matrix, sd) {}
+	X10_Clock(CRGB *leds)
+		: X10_Effect(leds) {}
 
 	void begin();
 	void loop();

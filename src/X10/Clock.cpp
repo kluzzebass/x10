@@ -1,5 +1,5 @@
 
-#include <X10/X10_Clock.h>
+#include <X10/Clock.h>
 
 void X10_Clock::begin()
 {
@@ -11,7 +11,8 @@ void X10_Clock::loop()
 
 	if (now >= (tick + 10))
 	{
-		matrix->fillScreen(0);
+		// clear();
+		fill(CRGB(255, 255, 0));
 
 		uint seconds = now / 1000;
 		uint minutesLo = seconds / 60 % 10; 
@@ -28,7 +29,7 @@ void X10_Clock::loop()
 
 		tick = now;
 		sequencePosition++;
-		matrix->show();
+		FastLED.show();
 	}
 }
 
@@ -47,7 +48,7 @@ void X10_Clock::drawDigit(uint digit, uint xPos, uint yPos)
 		{
 			if (hiLite(digit, x, y))
 			{
-				matrix->drawPixel(xPos + x, yPos + y, matrix->Color(0, 0, 255));
+				leds[xy(xPos + x, yPos + y)] = CRGB(0, 0, 255);
 			}
 		}
 	}
@@ -61,6 +62,6 @@ void X10_Clock::drawSeconds(uint seconds)
 	uint x2 = secondHand[seconds][1] >> 4;
 	uint y2 = secondHand[seconds][1] & 0xf;
 
-	matrix->drawPixel(x1, y1, matrix->Color(255, 0, 0));
-	matrix->drawPixel(x2, y2, matrix->Color(255, 0, 0));
+	leds[xy(x1, y1)] = CRGB(255, 0, 0);
+	leds[xy(x2, y2)] = CRGB(255, 0, 0);
 }

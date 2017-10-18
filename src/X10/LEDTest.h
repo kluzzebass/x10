@@ -1,12 +1,11 @@
 
-#include <X10/X10_Effect.h>
-
+#include <X10/Effect.h>
 
 class X10_LEDTest : public X10_Effect
 {
 public:
-	X10_LEDTest(X10_Config &cfg, Adafruit_NeoMatrix *matrix, SdFat *sd)
-		: X10_Effect(cfg, matrix, sd) {}
+	X10_LEDTest(CRGB *leds)
+		: X10_Effect(leds) {}
 
 	void begin();
 	void loop();
