@@ -3,6 +3,7 @@
 
 void X10_Clock::begin()
 {
+	
 }
 
 void X10_Clock::loop()

@@ -9,6 +9,27 @@
 #define CHIPSET WS2812
 #define COLOR_ORDER GRB
 #define MAX_BRIGHTNESS 100
+#define COLOR_CORRECTION 0xFFB0F0
+#define COLOR_TEMPERATURE 0xffffffff
+
+#define CS_PIN D8
+#define SPI_SPEED SPI_FULL_SPEED
+
+// Generic buffer length used for path names and ini file lines
+#define BUFFER_LEN 64
+
+// Maximum path length
+#define PATH_MAX 256
+
+
+#define PIXEL_BUFFER_SIZE 32
+#define X10_CFG_DIR "/"
+#define X10_CFG_FILE "x10.ini"
+#define ANIM_DIR "/anim"
+#define ANIM_CFG_FILE "config.ini"
+#define ANIM_HOLD_TIME 200
+#define ANIM_CYCLE_MODE 2
+
 
 #endif /* X10_CONFIG_H */
 

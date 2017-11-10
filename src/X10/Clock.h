@@ -36,6 +36,8 @@ protected:
 	unsigned long fxTick = 0;
 	uint16_t sequencePosition = 0;
 
+	CRGB bg[NUM_LEDS];
+
 	uint8_t font[10][10] = {
 		{ // 0
 			0b111,

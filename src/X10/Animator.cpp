@@ -1,0 +1,325 @@
+
+#include <X10/Animator.h>
+
+void X10_Animator::begin()
+{
+	animationCount = 0;
+
+	if (!d.open(ANIM_DIR))
+	{
+		s.print(F("Unable to open animation directory: "));
+		s.println(ANIM_DIR);
+		return;
+	}
+
+	s.println(F("Successfully opened animation directory."));
+
+	while (File f = d.openNextFile())
+	{
+		s.println(F("Found a file."));
+		animationCount++;
+	}
+
+	d.rewindDirectory();
+
+	s.print("Number of files: ");
+	s.println(animationCount);
+
+
+	// Don't leave this in; it's just for testing
+	// initAnimation("spirograph");
+
+	// Force animation election
+	nextAnimationPlz = true;
+}
+
+void X10_Animator::loop()
+{
+	unsigned long now = millis();
+	
+	// animate() has requested that a new animation be played
+	if (
+		nextAnimationPlz || 
+		(
+			(
+				now >= (
+					animationTick + cycleTimes[cycle] * 1000
+				)
+			) &&
+			(
+				!forceFinish ||
+				finished
+			)
+		)
+	)
+	{
+		if (nextAnimation())
+		{
+			// We've succeeded in finding a new animation.
+			nextAnimationPlz = false;
+			animationTick = now;
+		}
+	}
+	else
+	{
+		// It is okay to progress the current animation
+		animate();
+	}
+}
+
+const uint16_t *X10_Animator::getCycleTimes()
+{
+	return cycleTimes;
+}
+
+uint8_t X10_Animator::getCycle()
+{
+	return cycle;
+}
+
+void X10_Animator::setCycle(uint8_t c)
+{
+	if (c < (sizeof(cycleTimes) / sizeof(cycleTimes[0])))
+		cycle = c;
+}
+
+
+bool X10_Animator::nextAnimation()
+{
+	File f;
+	char buffer[BUFFER_LEN + 1];
+
+	if (!nested)
+	{
+		// Animation chain?
+		if (nextFolder[0])
+			return initAnimation(nextFolder);
+
+		if (!(f = d.openNextFile()))
+		{
+			// That didn't work. Rewind, and try another one.
+			s.println(F("Unable to open next file, rewinding."));
+			d.rewindDirectory();
+			return false;
+		}
+
+		f.getName(buffer, BUFFER_LEN);
+	}
+	else
+	{
+		snprintf(buffer, BUFFER_LEN, "%s/%d", nestName, ++currentNest);
+		s.print(F("Trying to locate next nest dweller: "));
+		s.println(buffer);
+		if (!d.exists(buffer)) {
+			// We've reached the end of the nest
+			s.println(F("Did not find the next dweller."));
+			nested = false;
+			nestName[0] = 0;
+			nextAnimationPlz = true;
+			return false;
+		}
+		else
+		{
+			s.println(F("Next nested animation."));
+		}
+	}
+	return initAnimation(buffer);
+}
+
+void X10_Animator::animate()
+{
+	char path[BUFFER_LEN + 1];
+	
+	unsigned long now = millis();
+
+	// Time for a new frame?
+	if (now < (frameTick + animationHold))
+		return;
+
+	finished = false;
+	if (!singleBitmap)
+	{
+		snprintf(path, BUFFER_LEN, "%s/%d.bmp", animationPath, currentFrame++);
+
+		if (!bmp.open(path))
+		{
+			// We've probably reached the end of an animation
+			if (animationLoop) {
+				finished = true;
+				currentFrame = 0;
+			}
+			else
+			{
+				// Request next animation
+				s.println(F("Time for the next animation."));
+				nextAnimationPlz = true;
+			}
+			
+			return;
+		}
+	}
+
+	drawBitmap(bmp, 0, 0, WIDTH, HEIGHT, offsetX, offsetY);
+
+	// Update offsets
+	offsetX -= offsetSpeedX;
+	offsetY += offsetSpeedY;
+	if (offsetX > (bmp.width() - WIDTH))
+		offsetX -= (bmp.width() - WIDTH);
+	if (offsetY > (bmp.height() - HEIGHT))
+		offsetY -= (bmp.height() - HEIGHT);
+	if (offsetX < 0)
+		offsetX += (bmp.width() - WIDTH);
+	if (offsetY < 0)
+		offsetY += (bmp.height() - HEIGHT);
+
+	FastLED.show();
+
+	frameTick = now;
+
+}
+
+bool X10_Animator::initAnimation(const char *anim)
+{
+
+	File f;
+	char path[PATH_MAX + 1];
+
+	snprintf(path, PATH_MAX, "%s/%s", ANIM_DIR, anim);
+
+	// Maybe it is a system thing, and should be skipped?
+	if (anim[0] == '0' && anim[1] == '0')
+	{
+		s.println(F("Skipping system directory."));
+		return false;
+	}
+
+	// If this file even a thing
+	if (!f.open(path))
+	{
+		s.print(F("Unable to open animation path: "));
+		s.println(path);
+		return false;
+	}
+
+	// Is this a directory
+	if (!f.isDir())
+	{
+		s.print(F("Animation path is not a directory: "));
+		s.println(path);
+		return false;
+	}
+
+	// Is this a nested animation dir?
+	if (f.exists("0/0.bmp"))
+	{
+		s.print(F("Animation path is nested: "));
+		s.println(path);
+		nested = true;
+		currentNest = 0;
+		nextAnimationPlz = false;
+		strncpy(nestName, anim, BUFFER_LEN);
+		char buf[BUFFER_LEN + 1];
+		snprintf(buf, BUFFER_LEN, "%s/0", anim);
+
+		// This will initiate a search for animations within the nest
+		return initAnimation(buf);
+	}
+
+	// Can we find the first animation frame in the directory?
+	if (!f.exists("0.bmp"))
+	{
+		s.print(F("No animation file found directory: "));
+		s.println(path);
+		return false;
+	}
+
+	// Does the animation consist of a single bitmap?
+	singleBitmap = !f.exists("1.bmp");
+
+	// We're now reasonably certain that this is an animation
+	// directory, so it's time to rig up the defaults
+	strncpy(animationPath, path, PATH_MAX);
+	frameTick = millis();
+	currentFrame = 0;
+	animationHold = ANIM_HOLD_TIME;
+	animationLoop = true;
+	forceFinish = false;
+	finished = false;
+	offsetSpeedX = 0;
+	offsetSpeedY = 0;
+	translateLoop = true;
+	panOff = false;
+	nextFolder[0] = 0;
+	nextAnimationPlz = false;
+
+	s.print(F("Loading animation: "));
+	s.println(path);
+	
+	loadAnimationCfg(path);
+
+	offsetX = offsetSpeedX && panOff ? -WIDTH : 0;
+	offsetY = offsetSpeedY && panOff ? -HEIGHT : 0;
+
+	// TODO: ouput animation config to serial
+	s.print(F("Animation hold time: "));
+	s.println(animationHold);
+	s.print(F("Animation loop: "));
+	s.println(animationLoop);
+	s.print(F("Animation force finish: "));
+	s.println(forceFinish);
+	s.print(F("Offset Speed X: "));
+	s.println(offsetSpeedX);
+	s.print(F("Offset Speed Y: "));
+	s.println(offsetSpeedY);
+	s.print(F("Translation loop: "));
+	s.println(translateLoop);
+	s.print(F("Start movement off screen: "));
+	s.println(panOff);
+	s.print(F("Next animation folder: "));
+	s.println(nextFolder);
+
+	// Might as well open the file now.
+	if (singleBitmap && !bmp.open("0.bmp"))
+	{
+		nextAnimationPlz = true;
+		return false;
+	}
+
+	return true;
+}
+
+void X10_Animator::loadAnimationCfg(const char *path)
+{
+	char buffer[BUFFER_LEN + 1];
+	const char *animation = "animation";
+	const char *translate = "translate";
+
+	SD.chdir(path);
+
+	IniFile ini(ANIM_CFG_FILE);
+
+	if (!ini.open())
+	{
+		s.println(F("No config file found."));
+		return;
+	}
+	
+	if (!ini.validate(buffer, BUFFER_LEN))
+	{
+		s.println(F("Validation failed."));
+		return;
+	}
+
+	s.println(F("Loading configuration."));
+
+	ini.getValue(animation, "hold", buffer, BUFFER_LEN, animationHold);
+	ini.getValue(animation, "loop", buffer, BUFFER_LEN, animationLoop);
+	ini.getValue(animation, "finish", buffer, BUFFER_LEN, forceFinish);
+	ini.getValue(translate, "moveX", buffer, BUFFER_LEN, offsetSpeedX);
+	ini.getValue(translate, "moveY", buffer, BUFFER_LEN, offsetSpeedY);
+	ini.getValue(translate, "loop", buffer, BUFFER_LEN, translateLoop);
+	ini.getValue(translate, "panoff", buffer, BUFFER_LEN, panOff);
+	if (ini.getValue(translate, "nextfolder", buffer, BUFFER_LEN))
+		strncpy(buffer, nextFolder, BUFFER_LEN);
+}
