@@ -37,11 +37,14 @@ protected:
 	uint32_t colorTemperature = COLOR_TEMPERATURE;
 
 	// Wifi Config
-	char *wifi_ssid = NULL;
-	char *wifi_psk = NULL;
-	IPAddress ntp_server;
+	char *wifiSSID = NULL;
+	char *wifiPSK = NULL;
 
 	// NTP Config
+	IPAddress ntpServer;
+
+	// Animation config
+	char *animDir;
 
 
 	void bootStatus(int x, uint8_t r, uint8_t g, uint8_t b);
@@ -51,6 +54,8 @@ protected:
 	void beginRTC(int x);
 	void beginConfig(int x);
 	void beginWifi(int x);
+
+	void test();
 
 };
 

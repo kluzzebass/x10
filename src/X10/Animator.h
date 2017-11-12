@@ -31,7 +31,7 @@ protected:
 	const uint16_t cycleTimes[7] = { 10, 30, 60, 300, 900, 1800, 3600 };
 
 	// Currently chosen cycle time
-	uint8_t cycle = 1;
+	uint8_t cycle = 0;
 
 	// Should we step randomly between top level animations?
 	bool randomProgress = false; 
@@ -74,10 +74,11 @@ protected:
 
 	// How much to move the animation per frame?
 	int offsetSpeedX, offsetSpeedY;
-	int32_t offsetX, offsetY;
+	int16_t offsetX, offsetY;
+	int16_t minX, maxX, minY, maxY;
 
-	// Should the movements loop?
-	bool translateLoop;
+	// Should the translations loop?
+	bool translationLoop;
 
 	// Begin and end movement off screen?
 	bool panOff;
@@ -90,6 +91,7 @@ protected:
 
 	bool nextAnimation();
 	bool initAnimation(const char *anim);
+	void updatePanningLimits();
 	void loadAnimationCfg(const char *cfgpath);
 	void animate();
 };

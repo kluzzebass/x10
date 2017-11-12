@@ -25,10 +25,6 @@ void X10_Animator::begin()
 	s.print("Number of files: ");
 	s.println(animationCount);
 
-
-	// Don't leave this in; it's just for testing
-	// initAnimation("spirograph");
-
 	// Force animation election
 	nextAnimationPlz = true;
 }
@@ -36,22 +32,11 @@ void X10_Animator::begin()
 void X10_Animator::loop()
 {
 	unsigned long now = millis();
-	
-	// animate() has requested that a new animation be played
-	if (
-		nextAnimationPlz || 
-		(
-			(
-				now >= (
-					animationTick + cycleTimes[cycle] * 1000
-				)
-			) &&
-			(
-				!forceFinish ||
-				finished
-			)
-		)
-	)
+
+	bool timeHasCome = (now >= (animationTick + cycleTimes[cycle] * 1000));
+	bool okayToChange = (!forceFinish || (forceFinish && finished));
+
+	if (nextAnimationPlz || (timeHasCome && okayToChange))
 	{
 		if (nextAnimation())
 		{
@@ -137,6 +122,7 @@ void X10_Animator::animate()
 		return;
 
 	finished = false;
+
 	if (!singleBitmap)
 	{
 		snprintf(path, BUFFER_LEN, "%s/%d.bmp", animationPath, currentFrame++);
@@ -153,25 +139,56 @@ void X10_Animator::animate()
 				// Request next animation
 				s.println(F("Time for the next animation."));
 				nextAnimationPlz = true;
+				frameTick = now;
 			}
 			
 			return;
 		}
+		else
+		{
+			updatePanningLimits();
+		}
 	}
 
-	drawBitmap(bmp, 0, 0, WIDTH, HEIGHT, offsetX, offsetY);
+	clear();
+	drawFrame(bmp, offsetX, offsetY);
 
 	// Update offsets
-	offsetX -= offsetSpeedX;
-	offsetY += offsetSpeedY;
-	if (offsetX > (bmp.width() - WIDTH))
-		offsetX -= (bmp.width() - WIDTH);
-	if (offsetY > (bmp.height() - HEIGHT))
-		offsetY -= (bmp.height() - HEIGHT);
-	if (offsetX < 0)
-		offsetX += (bmp.width() - WIDTH);
-	if (offsetY < 0)
-		offsetY += (bmp.height() - HEIGHT);
+	offsetX += offsetSpeedX;
+	if (offsetSpeedX < 0 && offsetX < minX) {
+		if (translationLoop) {
+			offsetX = maxX;
+		} else {
+			nextAnimationPlz = true;
+		}
+		finished = true;
+	}
+	if (offsetSpeedX > 0 && offsetX > maxX) {
+		if (translationLoop) {
+			offsetX = minX;
+		} else {
+			nextAnimationPlz = true;
+		}
+		finished = true;
+	}
+
+	offsetY -= offsetSpeedY;
+	if (offsetSpeedY > 0 && offsetY < minY) {
+		if (translationLoop) {
+			offsetY = maxY;
+		} else {
+			nextAnimationPlz = true;
+		}
+		finished = true;
+	}
+	if (offsetSpeedY < 0 && offsetY > maxY) {
+		if (translationLoop) {
+			offsetY = minY;
+		} else {
+			nextAnimationPlz = true;
+		}
+		finished = true;
+	}
 
 	FastLED.show();
 
@@ -246,10 +263,12 @@ bool X10_Animator::initAnimation(const char *anim)
 	animationLoop = true;
 	forceFinish = false;
 	finished = false;
+	offsetX = 0;
+	offsetY = 0;
 	offsetSpeedX = 0;
 	offsetSpeedY = 0;
-	translateLoop = true;
-	panOff = false;
+	translationLoop = false;
+	panOff = true;
 	nextFolder[0] = 0;
 	nextAnimationPlz = false;
 
@@ -258,35 +277,82 @@ bool X10_Animator::initAnimation(const char *anim)
 	
 	loadAnimationCfg(path);
 
-	offsetX = offsetSpeedX && panOff ? -WIDTH : 0;
-	offsetY = offsetSpeedY && panOff ? -HEIGHT : 0;
-
-	// TODO: ouput animation config to serial
+	s.print(F("Single bitmap animation: "));
+	s.println(singleBitmap ? F("true") : F("false"));
 	s.print(F("Animation hold time: "));
 	s.println(animationHold);
 	s.print(F("Animation loop: "));
-	s.println(animationLoop);
+	s.println(animationLoop ? F("true") : F("false"));
 	s.print(F("Animation force finish: "));
-	s.println(forceFinish);
+	s.println(forceFinish ? F("true") : F("false"));
 	s.print(F("Offset Speed X: "));
 	s.println(offsetSpeedX);
 	s.print(F("Offset Speed Y: "));
 	s.println(offsetSpeedY);
 	s.print(F("Translation loop: "));
-	s.println(translateLoop);
+	s.println(translationLoop ? F("true") : F("false"));
 	s.print(F("Start movement off screen: "));
-	s.println(panOff);
+	s.println(panOff ? F("true") : F("false"));
 	s.print(F("Next animation folder: "));
 	s.println(nextFolder);
 
-	// Might as well open the file now.
+	// If it's a single bitmap, we might as well try to open the file.
 	if (singleBitmap && !bmp.open("0.bmp"))
 	{
 		nextAnimationPlz = true;
 		return false;
 	}
 
+	if (singleBitmap)
+	{
+		// Ignore forceFinish for multi-directional moving single bitmaps; it's
+		// just too complicated
+		if (offsetSpeedX != 0 && offsetSpeedY != 0) forceFinish = false;
+		updatePanningLimits();
+	}
+
+	// Set the movement starting position.
+	// offsetX = offsetSpeedX < 0 ? maxX : minX;
+	// offsetY = offsetSpeedY < 0 ? maxY : minY;
+	// offsetX = panOff && offsetSpeedX != 0 ? minX : 0;
+	// offsetY = panOff && offsetSpeedY != 0 ? minY : 0;
+
+	if (offsetSpeedX < 0) {
+		offsetX = maxX;
+	}
+
+	if (offsetSpeedX > 0) {
+		offsetX = minX;
+	}
+
+	if (offsetSpeedY < 0) {
+		offsetY = maxY;
+	}
+
+	if (offsetSpeedY > 0) {
+		offsetY = minY;
+	}
+
 	return true;
+}
+
+void X10_Animator::updatePanningLimits()
+{
+	if (panOff)
+	{
+		minX = -bmp.width();
+		maxX = WIDTH;
+		minY = -bmp.height();
+		maxY = HEIGHT;
+	}
+	else
+	{
+		minX = -bmp.width() + WIDTH;
+		maxX = 0;
+		minY = -bmp.height() + HEIGHT;
+		maxY = 0;
+	}
+
 }
 
 void X10_Animator::loadAnimationCfg(const char *path)
@@ -318,7 +384,7 @@ void X10_Animator::loadAnimationCfg(const char *path)
 	ini.getValue(animation, "finish", buffer, BUFFER_LEN, forceFinish);
 	ini.getValue(translate, "moveX", buffer, BUFFER_LEN, offsetSpeedX);
 	ini.getValue(translate, "moveY", buffer, BUFFER_LEN, offsetSpeedY);
-	ini.getValue(translate, "loop", buffer, BUFFER_LEN, translateLoop);
+	ini.getValue(translate, "loop", buffer, BUFFER_LEN, translationLoop);
 	ini.getValue(translate, "panoff", buffer, BUFFER_LEN, panOff);
 	if (ini.getValue(translate, "nextfolder", buffer, BUFFER_LEN))
 		strncpy(buffer, nextFolder, BUFFER_LEN);

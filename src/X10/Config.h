@@ -10,13 +10,13 @@
 #define COLOR_ORDER GRB
 #define MAX_BRIGHTNESS 100
 #define COLOR_CORRECTION 0xFFB0F0
-#define COLOR_TEMPERATURE 0xffffffff
+#define COLOR_TEMPERATURE 0xffffff
 
 #define CS_PIN D8
 #define SPI_SPEED SPI_FULL_SPEED
 
-// Generic buffer length used for path names and ini file lines
-#define BUFFER_LEN 64
+// Generic buffer length used for buffers and ini file lines
+#define BUFFER_LEN 100
 
 // Maximum path length
 #define PATH_MAX 256

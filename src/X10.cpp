@@ -30,8 +30,10 @@ void X10::begin()
 	clear();
 	FastLED.show();
 
-}
+	// test();
 
+
+}
 
 void X10::loop()
 {
@@ -44,6 +46,26 @@ void X10::loop()
 
 }
 
+void X10::test()
+{
+	BMPReader bmp(SD);
+
+	bmp.open("/anim/smiley/0.bmp");
+
+	drawFrame(bmp, 10, -5);
+	FastLED.show();
+}
+
+
+
+
+
+
+
+
+
+
+
 void X10::bootStatus(int x, uint8_t r, uint8_t g, uint8_t b)
 {
 	leds[xy(x, 0)] = CRGB(r, g, b);
@@ -51,7 +73,6 @@ void X10::bootStatus(int x, uint8_t r, uint8_t g, uint8_t b)
 }
 
 
-// https://github.com/adafruit/Adafruit_NeoMatrix
 void X10::beginMatrix(int x)
 {
 	s.println(F("Matrix: Initializing..."));
@@ -137,27 +158,36 @@ void X10::beginConfig(int x)
 		bootStatus(x, 100, 0, 0);
 		return;
 	}
-	wifi_ssid = strdup(buffer);
+	wifiSSID = strdup(buffer);
 
 	if (!ini.getValue("wifi", "psk", buffer, BUFFER_LEN)) {
 		s.println(F("CFG: Error reading wifi psk!"));
 		bootStatus(x, 100, 0, 0);
 		return;
 	}
-	wifi_psk = strdup(buffer);
+	wifiPSK = strdup(buffer);
 
-	if (!ini.getIPAddress("ntp", "server", buffer, BUFFER_LEN, ntp_server)) {
+	if (!ini.getIPAddress("ntp", "server", buffer, BUFFER_LEN, ntpServer)) {
 		s.println(F("CFG: Error reading ntp server!"));
 		bootStatus(x, 100, 0, 0);
 		return;
 	}
 
+	if (!ini.getValue("animator", "animDir", buffer, BUFFER_LEN)) {
+		s.println(F("CFG: Error reading animator animDir!"));
+		bootStatus(x, 100, 0, 0);
+		return;
+	}
+	animDir = strdup(buffer);
+	
+
+
 	s.print("CFG: wifi ssid: ");
-	s.println(wifi_ssid);
+	s.println(wifiSSID);
 	s.print("CFG: wifi psk: ");
-	s.println(wifi_psk);
+	s.println(wifiPSK);
 	s.print("CFG: ntp server: ");
-	s.println(ntp_server);
+	s.println(ntpServer);
 
 	s.println(F("CFG: Done."));
 	bootStatus(x, 0, 100, 0);
@@ -170,7 +200,7 @@ void X10::beginWifi(int x)
 	bootStatus(x, 100, 0, 100);
 
 	WiFi.mode(WIFI_STA);
-	WiFi.begin(wifi_ssid, wifi_psk);
+	WiFi.begin(wifiSSID, wifiPSK);
 
 	while (WiFi.status() != WL_CONNECTED) {
 		delay(500);

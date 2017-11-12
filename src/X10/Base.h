@@ -47,7 +47,8 @@ protected:
 	void fill(CRGB color);
 	void clear();
 
-	void drawBitmap(BMPReader &bmp, uint8_t x, uint8_t y, uint16_t dx, uint16_t dy, uint16_t bmpX, uint16_t bmpY);
+	void drawBitmap(BMPReader &bmp, uint16_t x, uint16_t y, uint16_t dx, uint16_t dy, uint16_t bmpX, uint16_t bmpY);
+	void drawFrame(BMPReader &bmp, int16_t x, int16_t y);
 
 };
 
