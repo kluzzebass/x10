@@ -4,8 +4,8 @@
 class X10_LEDTest : public X10_Effect
 {
 public:
-	X10_LEDTest(CRGB *leds)
-		: X10_Effect(leds) {}
+	X10_LEDTest(CRGB *leds, Stream &s)
+		: X10_Effect(leds, s) {}
 
 	void begin();
 	void loop();

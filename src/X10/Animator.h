@@ -6,8 +6,11 @@ extern SdFat SD;
 class X10_Animator : public X10_Effect
 {
 public:
-	X10_Animator(CRGB *leds)
-		: X10_Effect(leds), bmp(SD) {}
+	X10_Animator(CRGB *leds, Stream &s, const char *animDir, const char *animCfgFile)
+		: X10_Effect(leds, s),
+			animDir(animDir),
+			animCfgFile(animCfgFile),
+			bmp(SD) {}
 
 	void begin();
 	void loop();
@@ -15,10 +18,18 @@ public:
 	const uint16_t *getCycleTimes();
 	uint8_t getCycle();
 	void setCycle(uint8_t);
+	bool getRandomize();
+	void setRandomize(bool r);
 
 protected:
 
-	// Current working directory
+	// Here there be animations
+	const char *animDir;
+
+	// Here there be configs
+	const char *animCfgFile;
+
+	// Current open working directory
 	File d;
 
 	// Bitmap reader
@@ -34,7 +45,7 @@ protected:
 	uint8_t cycle = 0;
 
 	// Should we step randomly between top level animations?
-	bool randomProgress = false; 
+	bool randomize = false; 
 
 	// Number of top level animation dirs in the SD card
 	uint16_t animationCount;

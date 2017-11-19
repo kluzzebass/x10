@@ -5,8 +5,8 @@
 class X10_ColorCycle : public X10_Effect
 {
 public:
-	X10_ColorCycle(CRGB *leds)
-		: X10_Effect(leds) {}
+	X10_ColorCycle(CRGB *leds, Stream &s)
+		: X10_Effect(leds, s) {}
 
 	void begin();
 	void loop();

@@ -4,11 +4,13 @@
 void X10_Animator::begin()
 {
 	animationCount = 0;
+	animDir = animDir ? animDir : ANIM_DIR;
+	animCfgFile = animCfgFile ? animCfgFile : ANIM_CFG_FILE;
 
-	if (!d.open(ANIM_DIR))
+	if (!d.open(animDir))
 	{
 		s.print(F("Unable to open animation directory: "));
-		s.println(ANIM_DIR);
+		s.println(animDir);
 		return;
 	}
 
@@ -68,6 +70,15 @@ void X10_Animator::setCycle(uint8_t c)
 		cycle = c;
 }
 
+bool X10_Animator::getRandomize()
+{
+	return randomize;
+}
+
+void X10_Animator::setRandomize(bool r)
+{
+	randomize = r;
+}
 
 bool X10_Animator::nextAnimation()
 {
@@ -80,12 +91,22 @@ bool X10_Animator::nextAnimation()
 		if (nextFolder[0])
 			return initAnimation(nextFolder);
 
-		if (!(f = d.openNextFile()))
+		if (randomize)
 		{
-			// That didn't work. Rewind, and try another one.
-			s.println(F("Unable to open next file, rewinding."));
-			d.rewindDirectory();
-			return false;
+			for (int i = 0; i < random(animationCount); i++)
+			{
+				// Keep opening and rewinding
+				if (!(f = d.openNextFile())) d.rewindDirectory();
+			}
+		}
+		else
+		{
+			if (!(f = d.openNextFile()))
+			{
+				// That didn't work. Rewind, and try different animation.
+				d.rewindDirectory();
+				return false;
+			}
 		}
 
 		f.getName(buffer, BUFFER_LEN);
@@ -202,7 +223,7 @@ bool X10_Animator::initAnimation(const char *anim)
 	File f;
 	char path[PATH_MAX + 1];
 
-	snprintf(path, PATH_MAX, "%s/%s", ANIM_DIR, anim);
+	snprintf(path, PATH_MAX, "%s/%s", animDir, anim);
 
 	// Maybe it is a system thing, and should be skipped?
 	if (anim[0] == '0' && anim[1] == '0')
@@ -312,11 +333,6 @@ bool X10_Animator::initAnimation(const char *anim)
 	}
 
 	// Set the movement starting position.
-	// offsetX = offsetSpeedX < 0 ? maxX : minX;
-	// offsetY = offsetSpeedY < 0 ? maxY : minY;
-	// offsetX = panOff && offsetSpeedX != 0 ? minX : 0;
-	// offsetY = panOff && offsetSpeedY != 0 ? minY : 0;
-
 	if (offsetSpeedX < 0) {
 		offsetX = maxX;
 	}
@@ -363,7 +379,7 @@ void X10_Animator::loadAnimationCfg(const char *path)
 
 	SD.chdir(path);
 
-	IniFile ini(ANIM_CFG_FILE);
+	IniFile ini(animCfgFile);
 
 	if (!ini.open())
 	{

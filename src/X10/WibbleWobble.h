@@ -4,8 +4,8 @@
 class X10_WibbleWobble : public X10_Effect
 {
 public:
-	X10_WibbleWobble(CRGB *leds)
-		: X10_Effect(leds) {}
+	X10_WibbleWobble(CRGB *leds, Stream &s)
+		: X10_Effect(leds, s) {}
 
 	void begin();
 	void loop();

@@ -13,8 +13,8 @@ class X10_Clock : public X10_Effect
 {
 public:
 
-	X10_Clock(CRGB *leds, RtcDS1307<TwoWire> &rtc)
-		: X10_Effect(leds), rtc(rtc) {}
+	X10_Clock(CRGB *leds, Stream &s, RtcDS1307<TwoWire> &rtc)
+		: X10_Effect(leds, s), rtc(rtc) {}
 
 	void begin();
 	void loop();

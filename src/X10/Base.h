@@ -18,9 +18,6 @@
 
 #include <BMPReader.h>
 
-#define s Serial
-
-
 class X10_Base
 {
 public:
@@ -34,14 +31,15 @@ public:
 		eBitMapCompression
 	};
 
-	X10_Base(CRGB *leds)
-		: leds(leds) {};
+	X10_Base(CRGB *leds, Stream &s)
+		: leds(leds), s(s) {};
 
 	virtual void begin() = 0;
 	virtual void loop() = 0;
 
 protected:
 	CRGB *leds;
+	Stream &s;
 
 	uint16_t xy(uint8_t x, uint8_t y);
 	void fill(CRGB color);

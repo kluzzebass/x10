@@ -16,8 +16,8 @@ class X10 : public X10_Base
 {
 public:
 
-	X10(CRGB *leds, RtcDS1307<TwoWire> &rtc)
-		: X10_Base(leds), rtc(rtc) {}
+	X10(CRGB *leds, Stream &s, RtcDS1307<TwoWire> &rtc)
+		: X10_Base(leds, s), rtc(rtc) {}
 
 	void begin();
 	void loop();
@@ -45,6 +45,7 @@ protected:
 
 	// Animation config
 	char *animDir;
+	char *animCfgFile;
 
 
 	void bootStatus(int x, uint8_t r, uint8_t g, uint8_t b);

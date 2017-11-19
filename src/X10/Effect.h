@@ -8,8 +8,8 @@ class X10_Effect : public X10_Base
 {
 public:
 
-	X10_Effect(CRGB *leds)
-		: X10_Base(leds) {}
+	X10_Effect(CRGB *leds, Stream &s)
+		: X10_Base(leds, s) {}
 
 protected:
 

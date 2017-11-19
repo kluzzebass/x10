@@ -5,6 +5,15 @@ SdFat SD;
 
 void X10::begin()
 {
+	// Seed the random generator
+	unsigned long seed = 0;
+	for (int i = 0; i < sizeof(seed * 8); i++)
+	{
+		seed <<= 1;
+		seed |= analogRead(0) & 1;
+	}
+	randomSeed(seed);
+
 	s.println(F("\n\nStarting X10 initialization."));
 	beginMatrix(0);
 	beginSD(1);
@@ -12,11 +21,11 @@ void X10::begin()
 	beginRTC(3);
 	beginWifi(4);
 
-	clock = new X10_Clock(leds, rtc);
-	ledTest = new X10_LEDTest(leds);
-	colorCycle = new X10_ColorCycle(leds);
-	wibbleWobble = new X10_WibbleWobble(leds);
-	animator = new X10_Animator(leds);
+	clock = new X10_Clock(leds, s, rtc);
+	ledTest = new X10_LEDTest(leds, s);
+	colorCycle = new X10_ColorCycle(leds, s);
+	wibbleWobble = new X10_WibbleWobble(leds, s);
+	animator = new X10_Animator(leds, s, animDir, animCfgFile);
 
 	clock->begin();
 	ledTest->begin();
@@ -55,15 +64,6 @@ void X10::test()
 	drawFrame(bmp, 10, -5);
 	FastLED.show();
 }
-
-
-
-
-
-
-
-
-
 
 
 void X10::bootStatus(int x, uint8_t r, uint8_t g, uint8_t b)
@@ -133,6 +133,9 @@ void X10::beginSD(int x)
 void X10::beginConfig(int x)
 {
 	char buffer[BUFFER_LEN];
+	const char *wifi = "wifi";
+	const char *ntp = "ntp";
+	const char *animator = "animator";
 
 	s.println(F("CFG: Reading config file..."));
 	bootStatus(x, 100, 0, 100);
@@ -153,41 +156,42 @@ void X10::beginConfig(int x)
 		return;		
 	}
 
-	if (!ini.getValue("wifi", "ssid", buffer, BUFFER_LEN)) {
+	if (!ini.getValue(wifi, "ssid", buffer, BUFFER_LEN)) {
 		s.println(F("CFG: Error reading wifi ssid!"));
 		bootStatus(x, 100, 0, 0);
 		return;
 	}
 	wifiSSID = strdup(buffer);
 
-	if (!ini.getValue("wifi", "psk", buffer, BUFFER_LEN)) {
+	if (!ini.getValue(wifi, "psk", buffer, BUFFER_LEN)) {
 		s.println(F("CFG: Error reading wifi psk!"));
 		bootStatus(x, 100, 0, 0);
 		return;
 	}
 	wifiPSK = strdup(buffer);
 
-	if (!ini.getIPAddress("ntp", "server", buffer, BUFFER_LEN, ntpServer)) {
+	if (!ini.getIPAddress(ntp, "server", buffer, BUFFER_LEN, ntpServer)) {
 		s.println(F("CFG: Error reading ntp server!"));
 		bootStatus(x, 100, 0, 0);
 		return;
 	}
 
-	if (!ini.getValue("animator", "animDir", buffer, BUFFER_LEN)) {
-		s.println(F("CFG: Error reading animator animDir!"));
-		bootStatus(x, 100, 0, 0);
-		return;
+	if (ini.getValue(animator, "animDir", buffer, BUFFER_LEN)) {
+		animDir = strdup(buffer);
 	}
-	animDir = strdup(buffer);
+
+	if (!ini.getValue(animator, "animCfgFile", buffer, BUFFER_LEN)) {
+		animCfgFile = strdup(buffer);
+	}
 	
-
-
-	s.print("CFG: wifi ssid: ");
+	s.print(F("CFG: wifi wifiSSID:    "));
 	s.println(wifiSSID);
-	s.print("CFG: wifi psk: ");
+	s.print(F("CFG: wifi wifiPSK:     "));
 	s.println(wifiPSK);
-	s.print("CFG: ntp server: ");
+	s.print(F("CFG: ntp ntpServer:    "));
 	s.println(ntpServer);
+	s.print(F("CFG: animator animDir: "));
+	s.println(animDir);
 
 	s.println(F("CFG: Done."));
 	bootStatus(x, 0, 100, 0);
