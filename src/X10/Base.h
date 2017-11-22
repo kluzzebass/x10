@@ -21,15 +21,6 @@
 class X10_Base
 {
 public:
-	enum error_t {
-		eNoError = 0,
-		eFileNotFound,
-		eBitMapHeader,
-		eBitMapFileHeader,
-		eBitMapPlanes,
-		eBitMapDepth,
-		eBitMapCompression
-	};
 
 	X10_Base(CRGB *leds, Stream &s)
 		: leds(leds), s(s) {};

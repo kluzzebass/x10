@@ -80,6 +80,11 @@ void X10_Animator::setRandomize(bool r)
 	randomize = r;
 }
 
+void X10_Animator::next()
+{
+	nextAnimationPlz = true;
+}
+
 bool X10_Animator::nextAnimation()
 {
 	File f;

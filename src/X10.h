@@ -10,6 +10,10 @@
 #include <X10/WibbleWobble.h>
 #include <X10/Animator.h>
 
+#include <WiFiClient.h>
+#include <ESP8266WebServer.h>
+#include <ESP8266mDNS.h>
+
 extern SdFat SD;
 
 class X10 : public X10_Base
@@ -25,12 +29,15 @@ public:
 protected:
 
 	RtcDS1307<TwoWire> &rtc;
-	
+	ESP8266WebServer srv;
+
 	X10_Clock *clock;
 	X10_LEDTest *ledTest;
 	X10_ColorCycle *colorCycle;
 	X10_WibbleWobble *wibbleWobble;
 	X10_Animator *animator;
+
+	uint8_t currentEffect;
 
 	// Matrix Config
 	uint32_t colorCorrection = COLOR_CORRECTION;
@@ -55,8 +62,10 @@ protected:
 	void beginRTC(int x);
 	void beginConfig(int x);
 	void beginWifi(int x);
+	void beginWeb(int x);
 
-	void test();
+	void handleAPI(String &path);
+	void handleStaticContent();
 
 };
 

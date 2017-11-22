@@ -1,16 +1,16 @@
 
 #include <X10/Effect.h>
 
-extern SdFat SD;
+// extern SdFat SD;
 
 class X10_Animator : public X10_Effect
 {
 public:
-	X10_Animator(CRGB *leds, Stream &s, const char *animDir, const char *animCfgFile)
+	X10_Animator(CRGB *leds, Stream &s, const char *animDir, const char *animCfgFile, SdFat &sd)
 		: X10_Effect(leds, s),
 			animDir(animDir),
 			animCfgFile(animCfgFile),
-			bmp(SD) {}
+			bmp(sd) {}
 
 	void begin();
 	void loop();
@@ -20,6 +20,7 @@ public:
 	void setCycle(uint8_t);
 	bool getRandomize();
 	void setRandomize(bool r);
+	void next();
 
 protected:
 

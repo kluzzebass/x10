@@ -12,8 +12,9 @@ void X10_Clock::loop()
 
 	if (now >= (fxTick + 10))
 	{
-		fill(CRGB(255, 255, 0));
-	
+		// fill(CRGB(255, 255, 0));
+		clear();
+
 		drawDigit(hoursHi, 0, 3);
 		drawDigit(hoursLo, 4, 3);
 		drawDigit(minutesHi, 9, 3);

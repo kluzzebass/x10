@@ -20,17 +20,26 @@ void X10::begin()
 	beginConfig(2);
 	beginRTC(3);
 	beginWifi(4);
+	beginWeb(5);
 
+	// Set up the Clock Effect
 	clock = new X10_Clock(leds, s, rtc);
-	ledTest = new X10_LEDTest(leds, s);
-	colorCycle = new X10_ColorCycle(leds, s);
-	wibbleWobble = new X10_WibbleWobble(leds, s);
-	animator = new X10_Animator(leds, s, animDir, animCfgFile);
-
 	clock->begin();
+
+	// Set up the LEDTest Effect
+	ledTest = new X10_LEDTest(leds, s);
 	ledTest->begin();
+
+	// Set up the ColorCycle Effect
+	colorCycle = new X10_ColorCycle(leds, s);
 	colorCycle->begin();
+
+	// Set up the WibbleWobble Effect
+	wibbleWobble = new X10_WibbleWobble(leds, s);
 	wibbleWobble->begin();
+
+	// Set up the Animator Effect
+	animator = new X10_Animator(leds, s, animDir, animCfgFile, SD);
 	animator->begin();
 
 	s.println(F("X10 initialization complete."));
@@ -46,23 +55,14 @@ void X10::begin()
 
 void X10::loop()
 {
-	
-	// clock->loop();
+
+	clock->loop();
 	// ledTest->loop();
 	// colorCycle->loop();
 	// wibbleWobble->loop();
-	animator->loop();
+	// animator->loop();
 
-}
-
-void X10::test()
-{
-	BMPReader bmp(SD);
-
-	bmp.open("/anim/smiley/0.bmp");
-
-	drawFrame(bmp, 10, -5);
-	FastLED.show();
+	srv.handleClient();
 }
 
 
@@ -218,3 +218,29 @@ void X10::beginWifi(int x)
 	bootStatus(x, 0, 100, 0);
 }
 
+void X10::beginWeb(int x)
+{
+	// Gotta love those lambda functions.
+	srv.onNotFound([&]() {
+		if (srv.uri().startsWith("/api/")) {
+			String path = srv.uri().substring(5);
+			handleAPI(path);
+		}
+		else handleStaticContent();
+	});
+
+	srv.begin();
+
+	bootStatus(x, 0, 100, 0);
+}
+
+void X10::handleAPI(String &path)
+{
+	srv.send(200, "text/plain", "You called the API with path: " + path + "\n");
+
+}
+
+void X10::handleStaticContent()
+{
+	srv.send(404, "text/plain", "Not found.\n");
+}
