@@ -18,7 +18,6 @@ void X10_Animator::begin()
 
 	while (File f = d.openNextFile())
 	{
-		s.println(F("Found a file."));
 		animationCount++;
 	}
 
@@ -84,6 +83,26 @@ void X10_Animator::next()
 {
 	nextAnimationPlz = true;
 }
+
+bool X10_Animator::next(const char *anim)
+{
+	// Keep track of the nested status so we don't ruin the animation
+	// sequence even if initAnimation() fails.
+	bool oldNested = nested;
+	nested = false;
+	if (!initAnimation(anim))
+	{
+		nested = oldNested;
+		return false;
+	}
+	return true;
+}
+
+const char *X10_Animator::currentAnim()
+{
+	return nested ? nestName : animName;
+}
+
 
 bool X10_Animator::nextAnimation()
 {
@@ -283,6 +302,7 @@ bool X10_Animator::initAnimation(const char *anim)
 	// We're now reasonably certain that this is an animation
 	// directory, so it's time to rig up the defaults
 	strncpy(animationPath, path, PATH_MAX);
+	strncpy(animName, anim, BUFFER_LEN);
 	frameTick = millis();
 	currentFrame = 0;
 	animationHold = ANIM_HOLD_TIME;

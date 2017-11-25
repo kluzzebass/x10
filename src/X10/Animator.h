@@ -17,10 +17,13 @@ public:
 
 	const uint16_t *getCycleTimes();
 	uint8_t getCycle();
+	uint8_t getCycleTimesCount() { return (sizeof(cycleTimes) / sizeof(uint16_t)); };
 	void setCycle(uint8_t);
 	bool getRandomize();
 	void setRandomize(bool r);
 	void next();
+	bool next(const char *anim);
+	const char *currentAnim();
 
 protected:
 
@@ -40,7 +43,8 @@ protected:
 	uint32_t animationTick = 0;
 
 	// Various animation duration levels
-	const uint16_t cycleTimes[7] = { 10, 30, 60, 300, 900, 1800, 3600 };
+	#define CYCLE_TIMES 7
+	const uint16_t cycleTimes[CYCLE_TIMES] = { 10, 30, 60, 300, 900, 1800, 3600 };
 
 	// Currently chosen cycle time
 	uint8_t cycle = 0;
@@ -50,6 +54,9 @@ protected:
 
 	// Number of top level animation dirs in the SD card
 	uint16_t animationCount;
+
+	// Animation mame
+	char animName[BUFFER_LEN + 1];
 
 	// Top level animation folder (could be the top of a nested set of animations)
 	char nestName[BUFFER_LEN + 1];
