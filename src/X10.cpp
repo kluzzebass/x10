@@ -7,6 +7,8 @@ void X10::begin()
 {
 	s.println(F("\n\nStarting X10 initialization."));
 
+	// Insert some hardware info here
+
 	// Seed the random generator
 	unsigned long seed = 0;
 	for (int i = 0; i < sizeof(seed * 8); i++)
@@ -46,37 +48,41 @@ void X10::begin()
 	animator = new X10_Animator(leds, s, cfg.animDir, cfg.animCfgFile, SD);
 	animator->begin();
 
-
-	s.println(F("X10 initialization complete."));
-	// delay(1000);
+	// Make sure the first effect is initialized
+	initializePlz = true;
 
 	clear();
 	FastLED.show();
 
+	s.println(F("X10 initialization complete."));
 }
 
 void X10::loop()
 {
-
 	switch (currentEffect)
 	{
 		case 1:
+			if (initializePlz) animator->init();
 			animator->loop();
 			break;
 		case 2:
+			if (initializePlz) clock->init();
 			clock->loop();
 			break;
 		case 3:
+			if (initializePlz) colorCycle->init();
 			colorCycle->loop();
 			break;
 		case 4:
+			if (initializePlz) wibbleWobble->init();
 			wibbleWobble->loop();
 			break;
 		default:
+			if (initializePlz) ledTest->init();
 			ledTest->loop();
 			break;
 	}
-
+	initializePlz = false;
 	srv.handleClient();
 }
 
@@ -346,6 +352,7 @@ bool X10::switchEffect(uint8_t effect)
 	s.println(effect);
 
 	currentEffect = effect;
+	initializePlz = true;
 
 	writeToEEPROM();
 
@@ -452,12 +459,14 @@ void X10::handleApi(String &path)
 			if (path.equals("effect")) return hGetEffect();
 			if (path.equals("datetime")) return hGetDateTime();
 			if (path.equals("animator")) return hGetAnimator();
+			if (path.equals("wibblewobble")) return hGetWibbleWobble();
 			break;
 		case HTTP_POST:
 			if (path.equals("display")) return hPostDisplay();
 			if (path.equals("effect")) return hPostEffect();
 			if (path.equals("datetime")) return hPostDateTime();
 			if (path.equals("animator")) return hPostAnimator();
+			if (path.equals("wibblewobble")) return hPostWibbleWobble();
 			break;
 		case HTTP_OPTIONS:
 			break;
@@ -713,6 +722,108 @@ void X10::hPostAnimator()
 			return jsonBadRequest();
 		uint8_t cycle = root[F("cycle")];
 		animator->setCycle(cycle);
+	}
+
+	jsonOk();
+}
+
+
+
+
+
+
+
+
+
+
+// curl -s http://x10/api/wibblewobble | jq .
+
+void X10::hGetWibbleWobble()
+{
+	String msg;
+
+	msg += "{\"wibbleRange\":";
+	msg += WIBBLE_RANGE;
+	msg += ",\"wobbleRange\":";
+	msg += WOBBLE_RANGE;
+	msg += ",\"wibbleX\":";
+	msg += wibbleWobble->wibbleX();
+	msg += ",\"wibbleY\":";
+	msg += wibbleWobble->wibbleY();
+	msg += ",\"wobbleX\":";
+	msg += wibbleWobble->wobbleX();
+	msg += ",\"wobbleY\":";
+	msg += wibbleWobble->wobbleY();
+	msg += ",\"changeRate\":";
+	msg += wibbleWobble->changeRate();
+	msg += "}\n";
+
+	srv.send(200, mimeTypes[jsonm].subtype, msg);
+}
+
+// curl -s -X POST -H "Content-Type: application/json" -d '{"randomize":true,"changeRate":15}' http://x10/api/wibblewobble | jq .
+
+void X10::hPostWibbleWobble()
+{
+	StaticJsonBuffer<BUFFER_LEN> jsonBuffer;
+	JsonObject& root = jsonBuffer.parseObject(srv.arg("plain"));
+
+	if (!root.success()) return jsonBadRequest();
+
+	if (root.containsKey("changeRate"))
+	{
+		if (!root["changeRate"].is<uint16_t>())
+			return jsonBadRequest();
+		uint16_t w = root[F("changeRate")];
+		wibbleWobble->changeRate(w);
+	}
+
+	if (root.containsKey("wibbleX"))
+	{
+		if (!root["wibbleX"].is<uint16_t>())
+			return jsonBadRequest();
+		uint16_t w = root[F("wibbleX")];
+		if (w > WIBBLE_RANGE)
+			return jsonBadRequest();
+		wibbleWobble->wibbleX(w);
+	}
+
+	if (root.containsKey("wibbleY"))
+	{
+		if (!root["wibbleY"].is<uint16_t>())
+			return jsonBadRequest();
+		uint16_t w = root[F("wibbleY")];
+		if (w > WIBBLE_RANGE)
+			return jsonBadRequest();
+		wibbleWobble->wibbleY(w);
+	}
+
+	if (root.containsKey("wobbleX"))
+	{
+		if (!root["wobbleX"].is<uint16_t>())
+			return jsonBadRequest();
+		uint16_t w = root[F("wobbleX")];
+		if (w > WOBBLE_RANGE)
+			return jsonBadRequest();
+		wibbleWobble->wobbleX(w);
+	}
+
+	if (root.containsKey("wobbleY"))
+	{
+		if (!root["wobbleY"].is<uint16_t>())
+			return jsonBadRequest();
+		uint16_t w = root[F("wobbleY")];
+		if (w > WOBBLE_RANGE)
+			return jsonBadRequest();
+		wibbleWobble->wobbleY(w);
+	}
+
+	if (root.containsKey("randomize"))
+	{
+		if (!root["randomize"].is<bool>())
+			return jsonBadRequest();
+		bool w = root[F("randomize")];
+		if (w) wibbleWobble->randomize();
 	}
 
 	jsonOk();

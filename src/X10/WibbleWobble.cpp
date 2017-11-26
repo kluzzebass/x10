@@ -3,19 +3,42 @@
 
 void X10_WibbleWobble::begin()
 {
-	wibbleX = 39;
-	wibbleY = 27;
-	wobbleX = 310;
-	wobbleY = 350;
+	mLastChange = millis();
+	init();
+}
+
+void X10_WibbleWobble::init()
+{
+	randomize();
+}
+
+void X10_WibbleWobble::randomize()
+{
+	mWibbleX = random(WIBBLE_RANGE + 1);
+	do
+		mWibbleY = random(WIBBLE_RANGE + 1);
+	while (mWibbleX == mWibbleY);
+
+	mWobbleX = random(WOBBLE_RANGE + 1);
+	do
+		mWobbleY = random(WOBBLE_RANGE + 1);
+	while (mWobbleX == mWobbleY);
 }
 
 void X10_WibbleWobble::loop()
 {
 	uint32_t ms = millis();
-	int32_t yHueDelta32 = ((int32_t)cos16(ms * wibbleY) * (wobbleY / WIDTH));
-	int32_t xHueDelta32 = ((int32_t)cos16(ms * wibbleX) * (wobbleX / HEIGHT));
+	int32_t yHueDelta32 = ((int32_t)cos16(ms * (mWibbleY + WIBBLE_OFFSET)) * ((mWobbleY + WOBBLE_OFFSET) / WIDTH));
+	int32_t xHueDelta32 = ((int32_t)cos16(ms * (mWibbleX + WIBBLE_OFFSET)) * ((mWobbleX + WOBBLE_OFFSET) / HEIGHT));
 	drawOneFrame(ms / 65536, yHueDelta32 / 32768, xHueDelta32 / 32768);
 	FastLED.show();
+
+	unsigned long now = millis();
+	if (mChangeRate && (now >= (mLastChange + mChangeRate * 1000)))
+	{
+		randomize();
+		mLastChange = now;
+	}
 }
 
 void X10_WibbleWobble::drawOneFrame(byte startHue8, int8_t yHueDelta8, int8_t xHueDelta8)

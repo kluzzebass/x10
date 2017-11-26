@@ -81,6 +81,7 @@ protected:
 
 	// Currently running effect
 	uint8_t currentEffect;
+	bool initializePlz;
 
 	// File handke for the static web content directory
 	FatFile wd;
@@ -157,6 +158,9 @@ protected:
 
 	void hGetAnimator();
 	void hPostAnimator();
+
+	void hGetWibbleWobble();
+	void hPostWibbleWobble();
 
 
 };
