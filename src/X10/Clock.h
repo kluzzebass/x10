@@ -17,6 +17,7 @@ public:
 		: X10_Effect(leds, s), rtc(rtc) {}
 
 	void begin();
+	void init() {};
 	void loop();
 
 protected:

@@ -11,6 +11,8 @@ public:
 	X10_Effect(CRGB *leds, Stream &s)
 		: X10_Base(leds, s) {}
 
+	virtual void init() = 0;
+
 protected:
 
 	// Cyclic color sequencer with or without white

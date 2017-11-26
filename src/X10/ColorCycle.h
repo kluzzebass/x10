@@ -9,6 +9,7 @@ public:
 		: X10_Effect(leds, s) {}
 
 	void begin();
+	void init() {};
 	void loop();
 
 protected:

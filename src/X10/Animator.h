@@ -13,6 +13,7 @@ public:
 			bmp(sd) {}
 
 	void begin();
+	void init() {};
 	void loop();
 
 	const uint16_t *getCycleTimes();
