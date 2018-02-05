@@ -40,6 +40,11 @@
         <vue-slider v-model="changeRate" :min="0" :max="300" :formatter="function (value) { return value ? `${value} seconds` : 'off' }" @callback="changeWibbleWobble" ></vue-slider>
       </div>
     </div>
+    <div class="row mb-4">
+      <div class="col-12">
+        <button class="btn btn-success" @click="randomizeNow">Randomize now!</button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -107,6 +112,17 @@ export default {
         wobbleX: this.wobbleX,
         wobbleY: this.wobbleY,
         changeRate: this.changeRate
+      })
+        .then((response) => {
+          this.getWibbleWobble()
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    }, 500),
+    randomizeNow: _.debounce(function (value) {
+      http.post(this.baseUrl + 'wibblewobble', {
+        randomize: true
       })
         .then((response) => {
           this.getWibbleWobble()

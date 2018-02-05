@@ -106,10 +106,7 @@ void X10::writeToEEPROM()
 	p.brightness = FastLED.getBrightness();
 
 	// Write to eeprom
-	int w = EEPROM.put(0, p);
-	s.print("EEPROM: Wrote ");
-	s.print(w);
-	s.println(" bytes. ");
+	EEPROM.put(0, p);
 
 	EEPROM.commit();
 
@@ -124,10 +121,6 @@ void X10::readFromEEPROM()
 	// Read from eeprom
 	s.println(F("EEPROM: Reading..."));
 	EEPROM.get(0, p);
-
-	s.print("EEPROM: Read ");
-	s.print(r);
-	s.println(" bytes. ");
 
 	s.print("EEPROM: checksum = 0x");
 	s.println(p.checksum, HEX);
