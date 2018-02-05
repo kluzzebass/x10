@@ -16,7 +16,7 @@ public:
 	void init();
 	void loop();
 
-	void changeRate(uint16_t r) { mChangeRate = r; }
+	void changeRate(uint16_t r);
 	uint16_t changeRate() { return mChangeRate; }
 	void randomize();
 
@@ -25,10 +25,10 @@ public:
 	uint16_t wobbleX() { return mWobbleX; }
 	uint16_t wobbleY() { return mWobbleY; }
 
-	void wibbleX(uint16_t w) { mWibbleX = w; }
-	void wibbleY(uint16_t w) { mWibbleY = w; }
-	void wobbleX(uint16_t w) { mWobbleX = w; }
-	void wobbleY(uint16_t w) { mWobbleY = w; }
+	void wibbleX(uint16_t w);
+	void wibbleY(uint16_t w);
+	void wobbleX(uint16_t w);
+	void wobbleY(uint16_t w);
 
 protected:
 

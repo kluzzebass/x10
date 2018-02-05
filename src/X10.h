@@ -23,7 +23,9 @@ class X10 : public X10_Base
 public:
 
 	X10(CRGB *leds, Stream &s, RtcDS1307<TwoWire> &rtc)
-		: X10_Base(leds, s), rtc(rtc) {}
+		: X10_Base(leds, s), rtc(rtc) {
+		srv = new ESP8266WebServer();
+	}
 
 	void begin();
 	void loop();
@@ -61,7 +63,7 @@ protected:
 	int jsonm;
 
 	RtcDS1307<TwoWire> &rtc;
-	ESP8266WebServer srv;
+	ESP8266WebServer *srv;
 
 	#define EFFECTS 5
 

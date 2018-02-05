@@ -12,6 +12,54 @@ void X10_WibbleWobble::init()
 	randomize();
 }
 
+void X10_WibbleWobble::changeRate(uint16_t r)
+{
+	if (mChangeRate == r) return;
+	mChangeRate = r;
+	s.print("changeRate = ");
+	s.println(mChangeRate);
+}
+
+void X10_WibbleWobble::wibbleX(uint16_t w)
+{
+	if (mWibbleX == w) return;
+	mWibbleX = w;
+	if (mWibbleX < 0) mWibbleX = 0;
+	if (mWibbleX > WIBBLE_RANGE) mWibbleX = WIBBLE_RANGE;
+	s.print("wibbleX = ");
+	s.println(mWibbleX);
+}
+
+void X10_WibbleWobble::wibbleY(uint16_t w)
+{
+	if (mWibbleY == w) return;
+	mWibbleY = w;
+	if (mWibbleY < 0) mWibbleY = 0;
+	if (mWibbleY > WIBBLE_RANGE) mWibbleY = WIBBLE_RANGE;
+	s.print("wibbleY = ");
+	s.println(mWibbleY);
+}
+
+void X10_WibbleWobble::wobbleX(uint16_t w)
+{
+	if (mWobbleX == w) return;
+	mWobbleX = w;
+	if (mWobbleX < 0) mWobbleX = 0;
+	if (mWobbleX > WIBBLE_RANGE) mWobbleX = WIBBLE_RANGE;
+	s.print("wobbleX = ");
+	s.println(mWobbleX);
+}
+
+void X10_WibbleWobble::wobbleY(uint16_t w)
+{
+	if (mWobbleY == w) return;
+	mWobbleY = w;
+	if (mWobbleY < 0) mWobbleY = 0;
+	if (mWobbleY > WIBBLE_RANGE) mWobbleY = WIBBLE_RANGE;
+	s.print("wobbleY = ");
+	s.println(mWobbleY);
+}
+
 void X10_WibbleWobble::randomize()
 {
 	mWibbleX = random(WIBBLE_RANGE + 1);
@@ -23,6 +71,7 @@ void X10_WibbleWobble::randomize()
 	do
 		mWobbleY = random(WOBBLE_RANGE + 1);
 	while (mWobbleX == mWobbleY);
+	s.println("Randomizing WibbleWobble.");
 }
 
 void X10_WibbleWobble::loop()

@@ -83,7 +83,7 @@ void X10::loop()
 			break;
 	}
 	initializePlz = false;
-	srv.handleClient();
+	srv->handleClient();
 }
 
 
@@ -106,7 +106,11 @@ void X10::writeToEEPROM()
 	p.brightness = FastLED.getBrightness();
 
 	// Write to eeprom
-	EEPROM.put(0, p);
+	int w = EEPROM.put(0, p);
+	s.print("EEPROM: Wrote ");
+	s.print(w);
+	s.println(" bytes. ");
+
 	EEPROM.commit();
 
 	s.println(F("EEPROM: Done."));
@@ -120,6 +124,10 @@ void X10::readFromEEPROM()
 	// Read from eeprom
 	s.println(F("EEPROM: Reading..."));
 	EEPROM.get(0, p);
+
+	s.print("EEPROM: Read ");
+	s.print(r);
+	s.println(" bytes. ");
 
 	s.print("EEPROM: checksum = 0x");
 	s.println(p.checksum, HEX);
@@ -308,9 +316,9 @@ void X10::beginWeb(int x)
 	jsonm = mimeTypeIndex(jsons);
 
 	// Gotta love those lambda functions.
-	srv.onNotFound([&]() {
-		if (srv.uri().startsWith("/api/")) {
-			String path = srv.uri().substring(5);
+	srv->onNotFound([&]() {
+		if (srv->uri().startsWith("/api/")) {
+			String path = srv->uri().substring(5);
 			handleApi(path);
 		}
 		else handleStaticContent();
@@ -326,7 +334,7 @@ void X10::beginWeb(int x)
 		}
 	}
 
-	srv.begin();
+	srv->begin();
 
 	s.println(F("Web: Done."));
 	bootStatus(x, 0, 100, 0);
@@ -384,12 +392,12 @@ bool X10::switchEffect(uint8_t effect)
 
 void X10::notFound()
 {
-	srv.send(404, "text/plain", "Not found.\n");
+	srv->send(404, "text/plain", "Not found.\n");
 }
 
 void X10::badRequest()
 {
-	srv.send(400, "text/plain", "Bad request.\n");
+	srv->send(400, "text/plain", "Bad request.\n");
 }
 
 void X10::handleStaticContent()
@@ -397,7 +405,7 @@ void X10::handleStaticContent()
 	if (!wd.isOpen())
 		return notFound();
 
-	String path = srv.uri();
+	String path = srv->uri();
 
 	if (path.endsWith("/"))
 	{
@@ -426,7 +434,7 @@ void X10::handleStaticContent()
 	s.println("Web: mime-type = " + mimeTypes[m].subtype);
 
 	// All our ducks are in a row; time to send the file.
-	size_t sent = srv.streamFile(f, mimeTypes[m].subtype);
+	size_t sent = srv->streamFile(f, mimeTypes[m].subtype);
 	f.close();
 
 }
@@ -452,7 +460,11 @@ void X10::handleApi(String &path)
 	if (!path.length())
 		return badRequest();
 
-	switch (srv.method())
+	srv->sendHeader("Access-Control-Allow-Origin", "*", false);
+	srv->sendHeader("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS", false);
+	srv->sendHeader("Access-Control-Allow-Headers", "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With", false);
+
+	switch (srv->method())
 	{
 		case HTTP_GET:
 			if (path.equals("display")) return hGetDisplay();
@@ -469,6 +481,7 @@ void X10::handleApi(String &path)
 			if (path.equals("wibblewobble")) return hPostWibbleWobble();
 			break;
 		case HTTP_OPTIONS:
+			jsonOk();
 			break;
 		default:
 			return;
@@ -484,7 +497,7 @@ void X10::jsonStatus(int status, String title)
 	msg += ",\"title\":\"";
 	msg += title;
 	msg += "\"}\n";
-	srv.send(status, mimeTypes[jsonm].subtype, msg);
+	srv->send(status, mimeTypes[jsonm].subtype, msg);
 }
 
 void X10::jsonBadRequest()
@@ -517,7 +530,7 @@ void X10::hGetDisplay()
 	msg += cfg.minBrightness;
 	msg += "}\n";
 
-	srv.send(200, mimeTypes[jsonm].subtype, msg);
+	srv->send(200, mimeTypes[jsonm].subtype, msg);
 }
 
 // curl -s -X POST -H "Content-Type: application/json" -d '{"brightness":50}' http://x10/api/display | jq .
@@ -525,7 +538,7 @@ void X10::hGetDisplay()
 void X10::hPostDisplay()
 {
 	StaticJsonBuffer<BUFFER_LEN> jsonBuffer;
-	JsonObject& root = jsonBuffer.parseObject(srv.arg("plain"));
+	JsonObject& root = jsonBuffer.parseObject(srv->arg("plain"));
 
 	if (!root.success()) return jsonBadRequest();
 	int brightness = root[F("brightness")];
@@ -561,7 +574,7 @@ void X10::hGetEffect()
 	}
 	msg += "]}\n";
 
-	srv.send(200, mimeTypes[jsonm].subtype, msg);
+	srv->send(200, mimeTypes[jsonm].subtype, msg);
 }
 
 // curl -s -X POST -H "Content-Type: application/json" -d '{"current":1}' http://x10/api/effect | jq .
@@ -569,7 +582,7 @@ void X10::hGetEffect()
 void X10::hPostEffect()
 {
 	StaticJsonBuffer<BUFFER_LEN> jsonBuffer;
-	JsonObject& root = jsonBuffer.parseObject(srv.arg("plain"));
+	JsonObject& root = jsonBuffer.parseObject(srv->arg("plain"));
 
 	if (!root.success()) return jsonBadRequest();
 	int effect = root[F("current")];
@@ -604,7 +617,7 @@ void X10::hGetDateTime()
 	msg += t;
 	msg += "\"}\n";
 
-	srv.send(200, mimeTypes[jsonm].subtype, msg);
+	srv->send(200, mimeTypes[jsonm].subtype, msg);
 }
 
 // curl -s -X POST -H "Content-Type: application/json" -d '{"date":"Nov 25 2017","time":"18:28:45"}' http://x10/api/datetime | jq .
@@ -612,7 +625,7 @@ void X10::hGetDateTime()
 void X10::hPostDateTime()
 {
 	StaticJsonBuffer<BUFFER_LEN> jsonBuffer;
-	JsonObject& root = jsonBuffer.parseObject(srv.arg("plain"));
+	JsonObject& root = jsonBuffer.parseObject(srv->arg("plain"));
 
 	if (!root.success()) return jsonBadRequest();
 
@@ -676,7 +689,7 @@ void X10::hGetAnimator()
 
 	d.close();
 
-	srv.send(200, mimeTypes[jsonm].subtype, msg);
+	srv->send(200, mimeTypes[jsonm].subtype, msg);
 }
 
 // curl -s -X POST -H "Content-Type: application/json" -d '{"randomize":true}' http://x10/api/animator | jq .
@@ -687,7 +700,7 @@ void X10::hGetAnimator()
 void X10::hPostAnimator()
 {
 	StaticJsonBuffer<BUFFER_LEN> jsonBuffer;
-	JsonObject& root = jsonBuffer.parseObject(srv.arg("plain"));
+	JsonObject& root = jsonBuffer.parseObject(srv->arg("plain"));
 
 	if (!root.success()) return jsonBadRequest();
 
@@ -758,7 +771,7 @@ void X10::hGetWibbleWobble()
 	msg += wibbleWobble->changeRate();
 	msg += "}\n";
 
-	srv.send(200, mimeTypes[jsonm].subtype, msg);
+	srv->send(200, mimeTypes[jsonm].subtype, msg);
 }
 
 // curl -s -X POST -H "Content-Type: application/json" -d '{"randomize":true,"changeRate":15}' http://x10/api/wibblewobble | jq .
@@ -766,9 +779,13 @@ void X10::hGetWibbleWobble()
 void X10::hPostWibbleWobble()
 {
 	StaticJsonBuffer<BUFFER_LEN> jsonBuffer;
-	JsonObject& root = jsonBuffer.parseObject(srv.arg("plain"));
+	JsonObject& root = jsonBuffer.parseObject(srv->arg("plain"));
 
-	if (!root.success()) return jsonBadRequest();
+	if (!root.success()) {
+		Serial.println("Unable to parse JSON:");
+		Serial.println(srv->arg("plain"));
+		return jsonBadRequest();
+	}
 
 	if (root.containsKey("changeRate"))
 	{
