@@ -50,7 +50,7 @@ export default {
   name: 'MainMenu',
   data () {
     return {
-      baseUrl: 'http://x10/api/',
+      baseUrl: (process.env.NODE_ENV === 'development' ? 'http://x10' : '') + '/api/',
       display: null,
       current: null,
       effects: null,
