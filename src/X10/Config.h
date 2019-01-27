@@ -2,13 +2,22 @@
 #ifndef X10_CONFIG_H
 #define X10_CONFIG_H
 
-#define LED_PIN D3
+// If this is undef, default to FastLED
+#define NEOPIXELBUS
+
+
+#ifdef NEOPIXELBUS
+  #define LED_PIN RX
+#else
+  #define LED_PIN D3
+#endif
+
 #define WIDTH 16
 #define HEIGHT 16
 #define NUM_LEDS WIDTH * HEIGHT
 #define CHIPSET WS2812
 #define COLOR_ORDER GRB
-#define MAX_BRIGHTNESS 255
+#define MAX_BRIGHTNESS 150
 #define MIN_BRIGHTNESS 10
 #define COLOR_CORRECTION 0xFFB0F0
 #define COLOR_TEMPERATURE 0xffffff

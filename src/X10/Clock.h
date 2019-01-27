@@ -13,7 +13,13 @@ class X10_Clock : public X10_Effect
 {
 public:
 
-	X10_Clock(CRGB *leds, Stream &s, RtcDS1307<TwoWire> &rtc)
+	X10_Clock(
+#ifdef NEOPIXELBUS
+		NeoPixelBusType *leds,
+#else
+		CRGB *leds,
+#endif
+		Stream &s, RtcDS1307<TwoWire> &rtc)
 		: X10_Effect(leds, s), rtc(rtc) {}
 
 	void begin();
@@ -37,7 +43,12 @@ protected:
 	unsigned long fxTick = 0;
 	uint16_t sequencePosition = 0;
 
-	CRGB bg[NUM_LEDS];
+#ifdef NEOPIXELBUS
+		RgbColor bg[NUM_LEDS];
+#else
+		CRGB bg[NUM_LEDS];
+#endif
+
 
 	uint8_t font[10][10] = {
 		{ // 0

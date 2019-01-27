@@ -22,7 +22,13 @@ class X10 : public X10_Base
 {
 public:
 
-	X10(CRGB *leds, Stream &s, RtcDS1307<TwoWire> &rtc)
+	X10(
+#ifdef NEOPIXELBUS
+		NeoPixelBusType *leds,
+#else
+		CRGB *leds,
+#endif
+		 Stream &s, RtcDS1307<TwoWire> &rtc)
 		: X10_Base(leds, s), rtc(rtc) {
 		srv = new ESP8266WebServer();
 	}

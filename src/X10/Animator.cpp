@@ -235,7 +235,11 @@ void X10_Animator::animate()
 		finished = true;
 	}
 
+#ifdef NEOPIXELBUS
+	leds->Show();
+#else
 	FastLED.show();
+#endif
 
 	frameTick = now;
 

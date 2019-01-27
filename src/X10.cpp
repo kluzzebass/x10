@@ -11,7 +11,7 @@ void X10::begin()
 
 	// Seed the random generator
 	unsigned long seed = 0;
-	for (int i = 0; i < sizeof(seed * 8); i++)
+	for (unsigned int i = 0; i < sizeof(seed * (unsigned long)8); i++)
 	{
 		seed <<= 1;
 		seed |= analogRead(0) & 1;
@@ -51,8 +51,13 @@ void X10::begin()
 	// Make sure the first effect is initialized
 	initializePlz = true;
 
+
 	clear();
+#ifdef NEOPIXELBUS
+	leds->Show();
+#else
 	FastLED.show();
+#endif
 
 	s.println(F("X10 initialization complete."));
 }
@@ -89,8 +94,13 @@ void X10::loop()
 
 void X10::bootStatus(int x, uint8_t r, uint8_t g, uint8_t b)
 {
+#ifdef NEOPIXELBUS
+	leds->SetPixelColor(xy(x, 0), RgbColor(r, g, b));
+	leds->Show();
+#else
 	leds[xy(x, 0)] = CRGB(r, g, b);
 	FastLED.show();
+#endif
 }
 
 
@@ -103,7 +113,11 @@ void X10::writeToEEPROM()
 
 	// Populate the persist structure
 	p.effect = currentEffect;
+#ifdef NEOPIXELBUS
+	p.brightness = leds->GetBrightness();
+#else
 	p.brightness = FastLED.getBrightness();
+#endif
 
 	// Write to eeprom
 	EEPROM.put(0, p);
@@ -141,10 +155,13 @@ void X10::beginMatrix(int x)
 {
 	s.println(F("Matrix: Initializing..."));
 
+#ifdef NEOPIXELBUS
+	leds->Begin();
+#else
 	FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS);
 	FastLED.setCorrection(cfg.colorCorrection);
 	FastLED.setTemperature(cfg.colorTemperature);
-
+#endif
 	s.println(F("Matrix: Done."));
 	bootStatus(x, 0, 100, 0);
 }
@@ -340,8 +357,11 @@ bool X10::setBrightness(uint8_t brightness)
 
 	s.print(F("Setting brightness to: "));
 	s.println(brightness);
-	
+#ifdef NEOPIXELBUS
+	leds->SetBrightness(brightness);
+#else
 	FastLED.setBrightness(brightness);
+#endif
 	return true;
 }
 
@@ -428,6 +448,8 @@ void X10::handleStaticContent()
 
 	// All our ducks are in a row; time to send the file.
 	size_t sent = srv->streamFile(f, mimeTypes[m].subtype);
+  s.println("Web: content-length = " + sent);
+
 	f.close();
 
 }
@@ -516,7 +538,11 @@ void X10::hGetDisplay()
 	String msg;
 
 	msg += "{\"brightness\":";
+#ifdef NEOPIXELBUS
+	msg += leds->GetBrightness();
+#else
 	msg += FastLED.getBrightness();
+#endif
 	msg += ",\"maxBrightness\":";
 	msg += cfg.maxBrightness;
 	msg += ",\"minBrightness\":";

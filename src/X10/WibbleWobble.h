@@ -9,7 +9,13 @@
 class X10_WibbleWobble : public X10_Effect
 {
 public:
-	X10_WibbleWobble(CRGB *leds, Stream &s)
+	X10_WibbleWobble(
+#ifdef NEOPIXELBUS
+		NeoPixelBusType *leds,
+#else
+		CRGB *leds,
+#endif
+		Stream &s)
 		: X10_Effect(leds, s) {}
 
 	void begin();
@@ -40,5 +46,6 @@ protected:
 	int mWobbleX;
 	int mWobbleY;
 
+	int16_t cos16(uint16_t r);
 	void drawOneFrame(byte startHue8, int8_t yHueDelta8, int8_t xHueDelta8);
 };

@@ -4,7 +4,13 @@
 class X10_LEDTest : public X10_Effect
 {
 public:
-	X10_LEDTest(CRGB *leds, Stream &s)
+	X10_LEDTest(
+#ifdef NEOPIXELBUS
+		NeoPixelBusType *leds,
+#else
+		CRGB *leds,
+#endif
+		Stream &s)
 		: X10_Effect(leds, s) {}
 
 	void begin();

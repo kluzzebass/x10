@@ -15,12 +15,20 @@ void X10_ColorCycle::loop()
 		{
 			for (int y = 0; y < HEIGHT; y++)
 			{
-				leds[xy(x, y)] = colorSequence(sequencePosition + (10 * (x + y)), true);
+#ifdef NEOPIXELBUS
+				leds->SetPixelColor(xy(x, y), HsbColor((uint8_t)(sequencePosition + (10 * (x + y))) / 255.0, 1, 1));
+#else
+				leds[xy(x, y)] = CHSV((uint8_t)(sequencePosition + (10 * (x + y))), 255, 255);
+#endif
 			}
 		}
 
 		tick = now;
 		sequencePosition++;
+#ifdef NEOPIXELBUS
+		leds->Show();
+#else
 		FastLED.show();
+#endif
 	}
 }
