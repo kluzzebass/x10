@@ -21,11 +21,7 @@ void X10_Clock::loop()
 		drawDigit(minutesLo, 13, 3);
 		drawSeconds(seconds);
 
-#ifdef NEOPIXELBUS
 		leds->Show();
-#else
-		FastLED.show();
-#endif
 	
 		sequencePosition++;
 		fxTick = now;
@@ -63,11 +59,7 @@ void X10_Clock::drawDigit(uint digit, uint xPos, uint yPos)
 		{
 			if (hiLite(digit, x, y))
 			{
-#ifdef NEOPIXELBUS
 				leds->SetPixelColor(xy(xPos + x, yPos + y), RgbColor(0, 0, 255));
-#else
-				leds[xy(xPos + x, yPos + y)] = CRGB(0, 0, 255);
-#endif
 			}
 		}
 	}
@@ -81,12 +73,7 @@ void X10_Clock::drawSeconds(uint seconds)
 	uint x2 = secondHand[seconds][1] >> 4;
 	uint y2 = secondHand[seconds][1] & 0xf;
 
-#ifdef NEOPIXELBUS
 	leds->SetPixelColor(xy(x1, y1), RgbColor(255, 0, 0));
 	leds->SetPixelColor(xy(x2, y2), RgbColor(255, 0, 0));
-#else
-	leds[xy(x1, y1)] = CRGB(255, 0, 0);
-	leds[xy(x2, y2)] = CRGB(255, 0, 0);
-#endif
 
 }

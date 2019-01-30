@@ -5,11 +5,7 @@ class X10_ColorCycle : public X10_Effect
 {
 public:
 	X10_ColorCycle(
-#ifdef NEOPIXELBUS
 		NeoPixelBusType *leds,
-#else
-		CRGB *leds,
-#endif
 		Stream &s)
 		: X10_Effect(leds, s) {}
 

@@ -2,15 +2,7 @@
 #ifndef X10_CONFIG_H
 #define X10_CONFIG_H
 
-// If this is undef, default to FastLED
-#define NEOPIXELBUS
-
-
-#ifdef NEOPIXELBUS
-  #define LED_PIN RX
-#else
-  #define LED_PIN D3
-#endif
+#define LED_PIN RX
 
 #define WIDTH 16
 #define HEIGHT 16
@@ -30,7 +22,6 @@
 
 // Maximum path length
 #define PATH_MAX 256
-
 
 #define PIXEL_BUFFER_SIZE 32
 #define X10_CFG_DIR "/"

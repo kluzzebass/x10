@@ -10,11 +10,7 @@ class X10_WibbleWobble : public X10_Effect
 {
 public:
 	X10_WibbleWobble(
-#ifdef NEOPIXELBUS
 		NeoPixelBusType *leds,
-#else
-		CRGB *leds,
-#endif
 		Stream &s)
 		: X10_Effect(leds, s) {}
 

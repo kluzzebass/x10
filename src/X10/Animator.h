@@ -7,11 +7,7 @@ class X10_Animator : public X10_Effect
 {
 public:
 	X10_Animator(
-#ifdef NEOPIXELBUS
 		NeoPixelBusType *leds,
-#else
-		CRGB *leds,
-#endif
 		Stream &s, const char *animDir, const char *animCfgFile, SdFat &sd)
 		: X10_Effect(leds, s),
 			animDir(animDir),

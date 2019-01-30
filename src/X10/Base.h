@@ -7,13 +7,9 @@
 
 #include <Arduino.h>
 
-#ifdef NEOPIXELBUS
-	#include <NeoPixelBus.h>
-	#include <NeoPixelBrightnessBus.h>
-	#define NeoPixelBusType NeoPixelBrightnessBus<NeoGrbFeature, NeoEsp8266Dma800KbpsMethod>
-#else
-	#include <FastLED.h>
-#endif
+#include <NeoPixelBus.h>
+#include <NeoPixelBrightnessBus.h>
+#define NeoPixelBusType NeoPixelBrightnessBus<NeoGrbFeature, NeoEsp8266Dma800KbpsMethod>
 
 #include <ESP8266WiFi.h>
 #include <Wire.h>
@@ -29,11 +25,7 @@ class X10_Base
 public:
 
 	X10_Base(
-#ifdef NEOPIXELBUS
 		NeoPixelBusType *leds,
-#else
-		CRGB *leds,
-#endif
 		Stream &s)
 		: leds(leds), s(s) {};
 
@@ -41,19 +33,11 @@ public:
 	virtual void loop() = 0;
 
 protected:
-#ifdef NEOPIXELBUS
-		NeoPixelBusType *leds;
-#else
-		CRGB *leds;
-#endif
+	NeoPixelBusType *leds;
 	Stream &s;
 
 	uint16_t xy(uint8_t x, uint8_t y);
-#ifdef NEOPIXELBUS
 	void fill(RgbColor color);
-#else
-	void fill(CRGB color);
-#endif
 	void clear();
 
 	void drawBitmap(BMPReader &bmp, uint16_t x, uint16_t y, uint16_t dx, uint16_t dy, uint16_t bmpX, uint16_t bmpY);

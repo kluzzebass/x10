@@ -86,11 +86,7 @@ void X10_WibbleWobble::loop()
 	int32_t yHueDelta32 = ((int32_t)cos16(ms * (mWibbleY + WIBBLE_OFFSET)) * ((mWobbleY + WOBBLE_OFFSET) / WIDTH));
 	int32_t xHueDelta32 = ((int32_t)cos16(ms * (mWibbleX + WIBBLE_OFFSET)) * ((mWobbleX + WOBBLE_OFFSET) / HEIGHT));
 	drawOneFrame(ms / 65536, yHueDelta32 / 32768, xHueDelta32 / 32768);
-#ifdef NEOPIXELBUS
 	leds->Show();
-#else
-	FastLED.show();
-#endif
 
 	unsigned long now = millis();
 	if (mChangeRate && (now >= (mLastChange + mChangeRate * 1000)))
@@ -110,11 +106,7 @@ void X10_WibbleWobble::drawOneFrame(byte startHue8, int8_t yHueDelta8, int8_t xH
 		for (byte x = 0; x < WIDTH; x++)
 		{
 			pixelHue += xHueDelta8;
-#ifdef NEOPIXELBUS
 			leds->SetPixelColor(xy(x, y), HsbColor((float)pixelHue / 255.0, 1, 1));
-#else
-			leds[xy(x, y)] = CHSV(pixelHue, 255, 255);
-#endif
 		}
 	}
 }

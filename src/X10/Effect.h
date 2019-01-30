@@ -9,11 +9,7 @@ class X10_Effect : public X10_Base
 public:
 
 	X10_Effect(
-#ifdef NEOPIXELBUS
 		NeoPixelBusType *leds,
-#else
-		CRGB *leds,
-#endif
 		Stream &s)
 		: X10_Base(leds, s) {}
 

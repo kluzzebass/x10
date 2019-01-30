@@ -53,11 +53,7 @@ void X10::begin()
 
 
 	clear();
-#ifdef NEOPIXELBUS
 	leds->Show();
-#else
-	FastLED.show();
-#endif
 
 	s.println(F("X10 initialization complete."));
 }
@@ -94,13 +90,8 @@ void X10::loop()
 
 void X10::bootStatus(int x, uint8_t r, uint8_t g, uint8_t b)
 {
-#ifdef NEOPIXELBUS
 	leds->SetPixelColor(xy(x, 0), RgbColor(r, g, b));
 	leds->Show();
-#else
-	leds[xy(x, 0)] = CRGB(r, g, b);
-	FastLED.show();
-#endif
 }
 
 
@@ -113,11 +104,7 @@ void X10::writeToEEPROM()
 
 	// Populate the persist structure
 	p.effect = currentEffect;
-#ifdef NEOPIXELBUS
 	p.brightness = leds->GetBrightness();
-#else
-	p.brightness = FastLED.getBrightness();
-#endif
 
 	// Write to eeprom
 	EEPROM.put(0, p);
@@ -155,13 +142,8 @@ void X10::beginMatrix(int x)
 {
 	s.println(F("Matrix: Initializing..."));
 
-#ifdef NEOPIXELBUS
 	leds->Begin();
-#else
-	FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS);
-	FastLED.setCorrection(cfg.colorCorrection);
-	FastLED.setTemperature(cfg.colorTemperature);
-#endif
+
 	s.println(F("Matrix: Done."));
 	bootStatus(x, 0, 100, 0);
 }
@@ -357,11 +339,9 @@ bool X10::setBrightness(uint8_t brightness)
 
 	s.print(F("Setting brightness to: "));
 	s.println(brightness);
-#ifdef NEOPIXELBUS
+
 	leds->SetBrightness(brightness);
-#else
-	FastLED.setBrightness(brightness);
-#endif
+
 	return true;
 }
 
@@ -444,11 +424,13 @@ void X10::handleStaticContent()
 		return notFound();
 
 	int m = mimeTypeIndex(path);	
-	s.println("Web: mime-type = " + mimeTypes[m].subtype);
+	s.print(F("Web: mime-type = "));
+	s.println(mimeTypes[m].subtype);
 
 	// All our ducks are in a row; time to send the file.
 	size_t sent = srv->streamFile(f, mimeTypes[m].subtype);
-  s.println("Web: content-length = " + sent);
+  s.print(F("Web: content-length = "));
+	s.println(sent);
 
 	f.close();
 
@@ -538,11 +520,7 @@ void X10::hGetDisplay()
 	String msg;
 
 	msg += "{\"brightness\":";
-#ifdef NEOPIXELBUS
 	msg += leds->GetBrightness();
-#else
-	msg += FastLED.getBrightness();
-#endif
 	msg += ",\"maxBrightness\":";
 	msg += cfg.maxBrightness;
 	msg += ",\"minBrightness\":";

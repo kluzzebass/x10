@@ -20,29 +20,14 @@ uint16_t X10_Base::xy(uint8_t x, uint8_t y)
 	return i;
 }
 
-#ifdef NEOPIXELBUS
 void X10_Base::fill(RgbColor color)
-#else
-void X10_Base::fill(CRGB color)
-#endif
 {
-#ifdef NEOPIXELBUS
 	leds->ClearTo(color);
-#else
-	for (int i = 0; i < NUM_LEDS; i++)
-	{
-		leds[i] = color;
-	}
-#endif
 }
 
 void X10_Base::clear()
 {
-#ifdef NEOPIXELBUS
 	leds->ClearTo(RgbColor(0, 0, 0));
-#else
-	memset(leds, 0, sizeof(CRGB) * NUM_LEDS);
-#endif
 }
 
 void X10_Base::drawBitmap(BMPReader &bmp, uint16_t x, uint16_t y, uint16_t dx, uint16_t dy, uint16_t bmpX, uint16_t bmpY)
@@ -71,14 +56,10 @@ void X10_Base::drawBitmap(BMPReader &bmp, uint16_t x, uint16_t y, uint16_t dx, u
 
 		for (uint8_t j = 0; j < r; j++)
 		{
-#ifdef NEOPIXELBUS
 			uint8_t r = (p[j] >> 16) & 0xff;
 			uint8_t g = (p[j] >> 8) & 0xff;
 			uint8_t b = (p[j] >> 0) & 0xff;
 			leds->SetPixelColor(xy(x + j, y + i), RgbColor(r, g, b));
-#else
-			leds[xy(x + j, y + i)] = CRGB(p[j]);
-#endif
 		}
 	}
 }
@@ -132,14 +113,10 @@ void X10_Base::drawFrame(BMPReader &bmp, int16_t x, int16_t y)
 
 		for (uint8_t j = 0; j < r; j++)
 		{
-#ifdef NEOPIXELBUS
 			uint8_t r = (p[j] >> 16) & 0xff;
 			uint8_t g = (p[j] >> 8) & 0xff;
 			uint8_t b = (p[j] >> 0) & 0xff;
 			leds->SetPixelColor(xy(x + j, y + i), RgbColor(r, g, b));
-#else
-			leds[xy(x + j, y + i)] = CRGB(p[j]);
-#endif
 		}
 	}
 
