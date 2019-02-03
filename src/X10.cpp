@@ -18,7 +18,6 @@ void X10::begin()
 	}
 	randomSeed(seed);
 
-	EEPROM.begin(sizeof(persist_t));
 	readFromEEPROM();
 
 	beginMatrix(0);
@@ -50,7 +49,6 @@ void X10::begin()
 
 	// Make sure the first effect is initialized
 	initializePlz = true;
-
 
 	clear();
 	leds->Show();
@@ -106,6 +104,7 @@ void X10::writeToEEPROM()
 	p.brightness = currentBrightness;
 
 	// Write to eeprom
+	EEPROM.begin(sizeof(p));
 	EEPROM.put(0, p);
 
 	EEPROM.commit();
@@ -120,6 +119,7 @@ void X10::readFromEEPROM()
 
 	// Read from eeprom
 	s.println(F("EEPROM: Reading..."));
+	EEPROM.begin(sizeof(p));
 	EEPROM.get(0, p);
 
 	s.print("EEPROM: checksum = 0x");
@@ -308,15 +308,6 @@ void X10::beginWeb(int x)
 	jsonm = mimeTypeIndex(jsons);
 	plainm = mimeTypeIndex(txts);
 
-	// Gotta love those lambda functions.
-	// srv->onNotFound([&]() {
-	// 	if (srv->uri().startsWith("/api/")) {
-	// 		String path = srv->uri().substring(5);
-	// 		handleApi(path);
-	// 	}
-	// 	else handleStaticContent();
-	// });
-
 	// Open the webdir
 	if (cfg.webDir != NULL)
 	{
@@ -337,14 +328,16 @@ void X10::beginWeb(int x)
 
 bool X10::setBrightness(uint8_t brightness)
 {
-	if (brightness < cfg.minBrightness || brightness > cfg.maxBrightness)
-		return false;
+	// Cap the brightness
+	if (brightness < cfg.minBrightness)
+		brightness = cfg.minBrightness;
+	if (brightness > cfg.maxBrightness)
+		brightness = cfg.maxBrightness;
 
 	s.print(F("Setting brightness to: "));
 	s.println(brightness);
 
 	currentBrightness = brightness;
-
 	leds->SetBrightness(brightness);
 
 	return true;
@@ -377,7 +370,7 @@ bool X10::switchEffect(uint8_t effect)
  * 
  * 
  * 
- * 
+ * 												WEB
  * 
  * 
  * 
@@ -769,13 +762,9 @@ void X10::registerWebHandlers() {
 	}));
 
 
-
 	// Handle NOT FOUND and static content
 	srv->onNotFound([&](AsyncWebServerRequest *request) {
 		// Perhaps there's some static content we can serve?
-
-		s.print("Content-type: ");
-		s.println(request->contentType());
 
 		if (!wd.isOpen()) {
 			notFound(request);
