@@ -55,6 +55,9 @@ export default {
       animatorPending: false
     }
   },
+  props: [
+    'baseUrl'
+  ],
   components: {
     vueSlider
   },
@@ -73,7 +76,7 @@ export default {
     getAnimator () {
       if (this.animatorPending) return
       this.animatorPending = true
-      http.get('animator')
+      http.get(this.baseUrl + 'animator')
         .then((response) => {
           this.currentAnimation = response.data.currentAnimation
           this.selectedAnimation = response.data.currentAnimation
@@ -89,7 +92,7 @@ export default {
         })
     },
     toggleRandomization () {
-      http.post('animator', {
+      http.post(this.baseUrl + 'animator', {
         randomize: !this.randomize
       })
         .then((response) => {
@@ -100,35 +103,35 @@ export default {
         })
     },
     changeAnimation () {
-      http.post('animator', {
+      http.post(this.baseUrl + 'animator', {
         next: this.selectedAnimation
       })
-        .then(response => {
+        .then((response) => {
           this.getAnimator()
         })
-        .catch(error => {
+        .catch((error) => {
           console.log(error)
         })
     },
     nextAnimation () {
-      http.post('animator', {
+      http.post(this.baseUrl + 'animator', {
         next: true
       })
-        .then(response => {
+        .then((response) => {
           this.getAnimator()
         })
-        .catch(error => {
+        .catch((error) => {
           console.log(error)
         })
     },
     changeCycle: _.debounce(function (value) {
-      http.post('animator', {
+      http.post(this.baseUrl + 'animator', {
         cycle: this.cycleTimes.indexOf(value)
       })
-        .then(response => {
+        .then((response) => {
           this.getAnimator()
         })
-        .catch(error => {
+        .catch((error) => {
           console.log(error)
         })
     }, 100)

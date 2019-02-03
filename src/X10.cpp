@@ -140,6 +140,8 @@ void X10::readSettings()
 			s.print(read);
 			s.println(F(" bytes."));
 		}
+	} else {
+			s.println("Settings: File not found; using defaults.");
 	}
 
 	s.print("Settings: effect = ");
@@ -370,8 +372,6 @@ bool X10::switchEffect(uint8_t effect)
 
 	currentEffect = effect;
 	initializePlz = true;
-
-	writeSettings();
 
 	return true;
 }
@@ -612,6 +612,7 @@ void X10::registerWebHandlers() {
 					RtcDateTime compiled = RtcDateTime(d.c_str(), t.c_str());
 					rtc.SetDateTime(compiled);
 
+					writeSettings();
 					jsonOk(request);
 				} else {
 					jsonBadRequest(request);
@@ -676,6 +677,7 @@ void X10::registerWebHandlers() {
 					uint8_t cycle = root[F("cycle")];
 					animator->setCycle(cycle);
 				}
+				writeSettings();
 				jsonOk(request);
 				break;
 			default:
@@ -782,8 +784,13 @@ void X10::registerWebHandlers() {
 
 	// Handle NOT FOUND and static content
 	srv->onNotFound([&](AsyncWebServerRequest *request) {
-		// Perhaps there's some static content we can serve?
 
+		// Handle OPTIONS
+		if (request->method() == HTTP_OPTIONS) {
+			request->send(200);
+		}
+
+		// Perhaps there's some static content we can serve?
 		if (!wd.isOpen()) {
 			notFound(request);
 			return;

@@ -1,8 +1,6 @@
 <template>
   <div>
-    <h1 class="headline ml-2 text-center">
-      X10 Configurator
-    </h1>
+    <h1 class="ml-2 text-center">X10 Configurator</h1>
     <div v-if="display" class="card m-2">
       <div class="card-header">
         Brightness
@@ -28,7 +26,7 @@
             </div>
             <div :id="'collapse' + effect.id" :class="{ 'collapse': true, 'show': effect.id === current }" :aria-labelledby="'heading' + effect.id" data-parent="#accordion">
               <div class="card-body">
-                <component v-if="current === effect.id" v-bind:is="effect.name.replace(' ', '')"/>
+                <component v-if="current === effect.id" v-bind:is="effect.name.replace(' ', '')" :baseUrl="baseUrl"/>
               </div>
             </div>
           </div>
@@ -53,6 +51,7 @@ export default {
   name: 'MainMenu',
   data () {
     return {
+      baseUrl: (process.env.NODE_ENV === 'development' ? 'http://x10' : '') + '/api/',
       display: null,
       current: null,
       effects: null,
@@ -83,27 +82,27 @@ export default {
   },
   methods: {
     isEffectSelected: (effect, c) => effect === c,
-    changeEffect: function (effect) { // This has to be a regular function and not an arrow function!
+    changeEffect: function (effect) {
       if (effect === this.current) return
-      http.post('effect', {
+      http.post(this.baseUrl + 'effect', {
         current: effect
       })
-        .then(response => {
+        .then((response) => {
           this.current = effect
         })
-        .catch(error => {
+        .catch((error) => {
           console.log(error)
         })
     },
     getDisplay () {
       if (this.displayPending) return
       this.displayPending = true
-      http.get('display')
-        .then(response => {
+      http.get(this.baseUrl + 'display')
+        .then((response) => {
           this.display = response.data
           this.displayPending = false
         })
-        .catch(error => {
+        .catch((error) => {
           console.log(error)
           this.displayPending = false
         })
@@ -111,25 +110,25 @@ export default {
     getEffects () {
       if (this.effectsPending) return
       this.effectsPending = true
-      http.get('effect')
-        .then(response => {
+      http.get(this.baseUrl + 'effect')
+        .then((response) => {
           this.current = response.data.current
           this.effects = response.data.effects
           this.effectsPending = false
         })
-        .catch(error => {
+        .catch((error) => {
           console.log(error)
           this.effectsPending = false
         })
     },
     changeBrightness: _.debounce(function (value) {
-      http.post('display', {
+      http.post(this.baseUrl + 'display', {
         brightness: value
       })
-        .then(response => {
+        .then((response) => {
           this.brightness = value
         })
-        .catch(error => {
+        .catch((error) => {
           console.log(error)
         })
     }, 100)
@@ -139,7 +138,7 @@ export default {
 </script>
 
 <style lang="scss">
-h1.headline {
+h1 {
   background-color: #666666;
   -webkit-background-clip: text;
   -moz-background-clip: text;

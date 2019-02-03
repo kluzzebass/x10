@@ -16,6 +16,9 @@ export default {
       adjustmentPending: false
     }
   },
+  props: [
+    'baseUrl'
+  ],
   methods: {
     adjust () {
       let months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
@@ -32,16 +35,16 @@ export default {
       let dateStr = months[now.getMonth() - 1] + ' ' + now.getDate() + ' ' + now.getFullYear()
 
       console.log(dateStr)
-      http.post('datetime', {
+      http.post(this.baseUrl + 'datetime', {
         date: dateStr,
         time: timeStr
       })
-        .then(response => {
+        .then((response) => {
           this.adjustmentPending = false
           this.clockAdjusted = true
           this.buttonText = 'Clock adjusted'
         })
-        .catch(error => {
+        .catch((error) => {
           console.log(error)
           this.adjustmentPending = false
         })

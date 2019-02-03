@@ -68,6 +68,9 @@ export default {
       wibbleWobblePending: false
     }
   },
+  props: [
+    'baseUrl'
+  ],
   components: {
     vueSlider
   },
@@ -86,7 +89,7 @@ export default {
     getWibbleWobble () {
       if (this.wibbleWobblePending) return
       this.wibbleWobblePending = true
-      http.get('wibblewobble')
+      http.get(this.baseUrl + 'wibblewobble')
         .then((response) => {
           this.wibbleRange = response.data.wibbleRange
           this.wobbleRange = response.data.wobbleRange
@@ -103,28 +106,28 @@ export default {
         })
     },
     changeWibbleWobble: _.debounce(function (value) {
-      http.post('wibblewobble', {
+      http.post(this.baseUrl + 'wibblewobble', {
         wibbleX: this.wibbleX,
         wibbleY: this.wibbleY,
         wobbleX: this.wobbleX,
         wobbleY: this.wobbleY,
         changeRate: this.changeRate
       })
-        .then(response => {
+        .then((response) => {
           this.getWibbleWobble()
         })
-        .catch(error => {
+        .catch((error) => {
           console.log(error)
         })
     }, 500),
     randomizeNow: _.debounce(function (value) {
-      http.post('wibblewobble', {
+      http.post(this.baseUrl + 'wibblewobble', {
         randomize: true
       })
-        .then(response => {
+        .then((response) => {
           this.getWibbleWobble()
         })
-        .catch(error => {
+        .catch((error) => {
           console.log(error)
         })
     }, 500)
@@ -132,6 +135,6 @@ export default {
 }
 </script>
 
-<style lang="scss">
+<style lang="sass">
 
 </style>
