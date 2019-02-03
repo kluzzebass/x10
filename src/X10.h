@@ -16,7 +16,7 @@
 #include <ESP8266mDNS.h>
 #include <AsyncJson.h>
 #include <ArduinoJson.h>
-#include <EEPROM.h>
+#include <FS.h>
 
 class X10 : public X10_Base
 {
@@ -103,8 +103,6 @@ protected:
 		IPAddress netmask;
 
 		// Display Config
-		uint32_t colorCorrection = COLOR_CORRECTION;
-		uint32_t colorTemperature = COLOR_TEMPERATURE;
 		uint16_t maxBrightness = MAX_BRIGHTNESS;
 		uint16_t minBrightness = MIN_BRIGHTNESS;
 
@@ -119,19 +117,18 @@ protected:
 
 	cfg_t cfg;
 
-	// Anything in here will be persisted to eeprom
+	// Anything in here will be persisted to /settings
 	struct persist_t {
-		uint32_t checksum;
 		uint8_t effect;
 		uint8_t brightness;
-		bool animRandom;
 		uint8_t animCycle;
+		bool animRandom;
 	};
 
 	void bootStatus(int x, uint8_t r, uint8_t g, uint8_t b);
 
-	void writeToEEPROM();
-	void readFromEEPROM();
+	void writeSettings();
+	void readSettings();
 
 	void beginMatrix(int x);
 	void beginSD(int x);

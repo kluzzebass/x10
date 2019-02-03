@@ -18,7 +18,8 @@ void X10::begin()
 	}
 	randomSeed(seed);
 
-	readFromEEPROM();
+	SPIFFS.begin();
+	readSettings();
 
 	beginMatrix(0);
 	beginSD(1);
@@ -92,48 +93,65 @@ void X10::bootStatus(int x, uint8_t r, uint8_t g, uint8_t b)
 }
 
 
-void X10::writeToEEPROM()
+void X10::writeSettings()
 {
 	persist_t p;
 	memset(&p, 0, sizeof(persist_t));
 
-	s.println(F("EEPROM: Writing..."));
+	s.println(F("Settings: Writing..."));
 
 	// Populate the persist structure
 	p.effect = currentEffect;
 	p.brightness = currentBrightness;
 
-	// Write to eeprom
-	EEPROM.begin(sizeof(p));
-	EEPROM.put(0, p);
-
-	EEPROM.commit();
-
-	s.println(F("EEPROM: Done."));
+	fs::File f = SPIFFS.open(X10_SETTINGS_FILE, "w");
+	if (!f) {
+		s.println("Settings: File open failed.");
+	} else {
+		size_t wrote = f.write((uint8_t*)&p, sizeof(persist_t));
+		f.close();
+		s.print(F("Settings: Wrote "));
+		s.print(wrote);
+		s.println(F(" bytes."));
+	}
+	s.println(F("Settings: Done."));
 }
 
-void X10::readFromEEPROM()
+void X10::readSettings()
 {
 	persist_t p;
 	memset(&p, 0, sizeof(persist_t));
 
-	// Read from eeprom
-	s.println(F("EEPROM: Reading..."));
-	EEPROM.begin(sizeof(p));
-	EEPROM.get(0, p);
+	// Read from settings
+	s.println(F("Settings: Reading..."));
 
-	s.print("EEPROM: checksum = 0x");
-	s.println(p.checksum, HEX);
-	s.print("EEPROM: effect = ");
+	// Fill inn the defaults
+	p.brightness = MIN_BRIGHTNESS;
+	p.effect = DEFAULT_EFFECT;
+
+	if (SPIFFS.exists(X10_SETTINGS_FILE)) {
+		fs::File f = SPIFFS.open(X10_SETTINGS_FILE, "r");
+		if (!f) {
+			s.println("Settings: File open failed");
+		} else {
+			size_t read = f.read((uint8_t*)&p, sizeof(persist_t));
+			f.close();
+			s.print(F("Settings: Read "));
+			s.print(read);
+			s.println(F(" bytes."));
+		}
+	}
+
+	s.print("Settings: effect = ");
 	s.println(p.effect);
-	s.print("EEPROM: brightness = ");
+	s.print("Settings: brightness = ");
 	s.println(p.brightness);
 
 	// Spread persisted data
-	switchEffect(p.effect);
 	setBrightness(p.brightness);
+	switchEffect(p.effect);
 
-	s.println(F("EEPROM: Done."));
+	s.println(F("Settings: Done."));
 }
 
 
@@ -353,7 +371,7 @@ bool X10::switchEffect(uint8_t effect)
 	currentEffect = effect;
 	initializePlz = true;
 
-	writeToEEPROM();
+	writeSettings();
 
 	return true;
 }
@@ -531,7 +549,7 @@ void X10::registerWebHandlers() {
 					break;
 				}
 
-				writeToEEPROM();
+				writeSettings();
 				jsonOk(request);
 				break;
 			default:
@@ -557,7 +575,7 @@ void X10::registerWebHandlers() {
 					break;
 				}
 
-				writeToEEPROM();
+				writeSettings();
 				jsonOk(request);
 				break;
 			default:
@@ -752,7 +770,7 @@ void X10::registerWebHandlers() {
 					if (w) wibbleWobble->randomize();
 				}
 
-				writeToEEPROM();
+				writeSettings();
 				jsonOk(request);
 				break;
 			default:
