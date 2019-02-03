@@ -11,12 +11,12 @@
 #include <X10/Animator.h>
 
 #include <WiFiClient.h>
-#include <ESP8266WebServer.h>
+#include <ESPAsyncTCP.h>
+#include <ESPAsyncWebServer.h>
 #include <ESP8266mDNS.h>
+#include <AsyncJson.h>
 #include <ArduinoJson.h>
 #include <EEPROM.h>
-
-extern SdFat SD;
 
 class X10 : public X10_Base
 {
@@ -26,7 +26,7 @@ public:
 		NeoPixelBusType *leds,
 		 Stream &s, RtcDS1307<TwoWire> &rtc)
 		: X10_Base(leds, s), rtc(rtc) {
-		srv = new ESP8266WebServer();
+		srv = new AsyncWebServer(80);
 	}
 
 	void begin();
@@ -61,11 +61,12 @@ protected:
 		{ ".gz",	"application/x-gzip" }
 	};
 
-	// Quick access to the JSON mime subtype
+	// Quick access to the JSON and text/plain mime subtypes
 	int jsonm;
+	int plainm;
 
 	RtcDS1307<TwoWire> &rtc;
-	ESP8266WebServer *srv;
+	AsyncWebServer *srv;
 
 	#define EFFECTS 5
 
@@ -136,20 +137,21 @@ protected:
 	void beginWifi(int x);
 	void beginWeb(int x);
 
-	void notFound();
-	void badRequest();
-	void handleApi(String &path);
-	void handleStaticContent();
+	void registerWebHandlers();
+	void notFound(AsyncWebServerRequest *request);
+	void badRequest(AsyncWebServerRequest *request);
+	// void handleApi(String &path);
+	// void handleStaticContent();
 	int mimeTypeIndex(String &path);
 
 	bool switchEffect(uint8_t effect);
 	bool setBrightness(uint8_t brightness);
 
 	// API methods
-	void jsonStatus(int status, String title);
-	void jsonBadRequest();
-	void jsonNotFound();
-	void jsonOk();
+	void jsonStatus(AsyncWebServerRequest *request, int status, String title);
+	void jsonBadRequest(AsyncWebServerRequest *request);
+	void jsonNotFound(AsyncWebServerRequest *request);
+	void jsonOk(AsyncWebServerRequest *request);
 
 	void hGetDisplay();
 	void hPostDisplay();

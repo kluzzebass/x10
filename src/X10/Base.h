@@ -15,6 +15,8 @@
 #include <Wire.h>
 #include <RtcDS1307.h>
 #include <SPI.h> 
+
+#define FS_NO_GLOBALS
 #include <SdFat.h>
 #include <IniFile.h>
 
