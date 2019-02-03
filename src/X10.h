@@ -84,6 +84,9 @@ protected:
 	X10_ColorCycle *colorCycle;
 	X10_WibbleWobble *wibbleWobble;
 
+	// Current brightness
+	uint8_t currentBrightness;
+
 	// Currently running effect
 	uint8_t currentEffect;
 	bool initializePlz;

@@ -84,7 +84,6 @@ void X10::loop()
 			break;
 	}
 	initializePlz = false;
-	// srv->handleClient();
 }
 
 
@@ -104,7 +103,7 @@ void X10::writeToEEPROM()
 
 	// Populate the persist structure
 	p.effect = currentEffect;
-	p.brightness = leds->GetBrightness();
+	p.brightness = currentBrightness;
 
 	// Write to eeprom
 	EEPROM.put(0, p);
@@ -343,6 +342,8 @@ bool X10::setBrightness(uint8_t brightness)
 
 	s.print(F("Setting brightness to: "));
 	s.println(brightness);
+
+	currentBrightness = brightness;
 
 	leds->SetBrightness(brightness);
 
