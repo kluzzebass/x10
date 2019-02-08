@@ -4,11 +4,12 @@
 
 #include <X10/Base.h>
 
-#include <X10/Clock.h>
 #include <X10/LEDTest.h>
+#include <X10/Animator.h>
+#include <X10/Clock.h>
 #include <X10/ColorCycle.h>
 #include <X10/WibbleWobble.h>
-#include <X10/Animator.h>
+#include <X10/Fake3D.h>
 
 #include <WiFiClient.h>
 #include <ESPAsyncTCP.h>
@@ -68,14 +69,15 @@ protected:
 	RtcDS1307<TwoWire> &rtc;
 	AsyncWebServer *srv;
 
-	#define EFFECTS 5
+	#define EFFECTS 6
 
 	String effects[EFFECTS] = {
 		"LED Test",
 		"Animator",
 		"Clock",
 		"Color Cycle",
-		"Wibble Wobble"
+		"Wibble Wobble",
+		"Fake 3D"
 	};
 
 	X10_LEDTest *ledTest;
@@ -83,6 +85,7 @@ protected:
 	X10_Clock *clock;
 	X10_ColorCycle *colorCycle;
 	X10_WibbleWobble *wibbleWobble;
+	X10_Fake3D *fake3D;
 
 	// Current brightness
 	uint8_t currentBrightness;
@@ -140,8 +143,6 @@ protected:
 	void registerWebHandlers();
 	void notFound(AsyncWebServerRequest *request);
 	void badRequest(AsyncWebServerRequest *request);
-	// void handleApi(String &path);
-	// void handleStaticContent();
 	int mimeTypeIndex(String &path);
 
 	bool switchEffect(uint8_t effect);
@@ -153,20 +154,20 @@ protected:
 	void jsonNotFound(AsyncWebServerRequest *request);
 	void jsonOk(AsyncWebServerRequest *request);
 
-	void hGetDisplay();
-	void hPostDisplay();
+	// void hGetDisplay();
+	// void hPostDisplay();
 
-	void hGetEffect();
-	void hPostEffect();
+	// void hGetEffect();
+	// void hPostEffect();
 
-	void hGetDateTime();
-	void hPostDateTime();
+	// void hGetDateTime();
+	// void hPostDateTime();
 
-	void hGetAnimator();
-	void hPostAnimator();
+	// void hGetAnimator();
+	// void hPostAnimator();
 
-	void hGetWibbleWobble();
-	void hPostWibbleWobble();
+	// void hGetWibbleWobble();
+	// void hPostWibbleWobble();
 
 
 };

@@ -48,6 +48,10 @@ void X10::begin()
 	animator = new X10_Animator(leds, s, cfg.animDir, cfg.animCfgFile, SD);
 	animator->begin();
 
+	// Set up the Animator Effect
+	fake3D = new X10_Fake3D(leds, s);
+	fake3D->begin();
+
 	// Make sure the first effect is initialized
 	initializePlz = true;
 
@@ -76,6 +80,10 @@ void X10::loop()
 		case 4:
 			if (initializePlz) wibbleWobble->init();
 			wibbleWobble->loop();
+			break;
+		case 5:
+			if (initializePlz) fake3D->init();
+			fake3D->loop();
 			break;
 		default:
 			if (initializePlz) ledTest->init();
