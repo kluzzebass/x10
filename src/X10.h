@@ -15,9 +15,10 @@
 #include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <ESP8266mDNS.h>
-#include <AsyncJson.h>
 #include <ArduinoJson.h>
+#include <AsyncJson.h>
 #include <FS.h>
+#include <ArduinoOTA.h>
 
 class X10 : public X10_Base
 {
@@ -87,6 +88,10 @@ protected:
 	X10_WibbleWobble *wibbleWobble;
 	X10_Fake3D *fake3D;
 
+	// Power On/Off switch
+	bool power;
+	bool switchPower;
+
 	// Current brightness
 	uint8_t currentBrightness;
 
@@ -138,6 +143,7 @@ protected:
 	void beginRTC(int x);
 	void beginConfig(int x);
 	void beginWifi(int x);
+	void beginOTA(int x);
 	void beginWeb(int x);
 
 	void registerWebHandlers();
@@ -145,6 +151,7 @@ protected:
 	void badRequest(AsyncWebServerRequest *request);
 	int mimeTypeIndex(String &path);
 
+	bool setPower(bool onon);
 	bool switchEffect(uint8_t effect);
 	bool setBrightness(uint8_t brightness);
 
@@ -153,22 +160,6 @@ protected:
 	void jsonBadRequest(AsyncWebServerRequest *request);
 	void jsonNotFound(AsyncWebServerRequest *request);
 	void jsonOk(AsyncWebServerRequest *request);
-
-	// void hGetDisplay();
-	// void hPostDisplay();
-
-	// void hGetEffect();
-	// void hPostEffect();
-
-	// void hGetDateTime();
-	// void hPostDateTime();
-
-	// void hGetAnimator();
-	// void hPostAnimator();
-
-	// void hGetWibbleWobble();
-	// void hPostWibbleWobble();
-
 
 };
 

@@ -119,7 +119,6 @@ void X10_Base::drawFrame(BMPReader &bmp, int16_t x, int16_t y)
 			leds->SetPixelColor(xy(x + j, y + i), RgbColor(r, g, b));
 		}
 	}
-
-
-
 }
+
+

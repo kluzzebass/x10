@@ -5,11 +5,26 @@
     </h1>
     <div v-if="display" class="card m-2">
       <div class="card-header">
-        Brightness
+        Display
       </div>
       <div class="card-body">
-        <div width="100%">
-          <vue-slider v-model="display.brightness" :min="display.minBrightness" :max="display.maxBrightness" @callback="changeBrightness" ></vue-slider>
+        <div class="row">
+          <div class="col-3 mb-2">
+            Power
+          </div>
+          <div class="col-9 mb-2">
+            <button type="button" class="btn" :class="{ 'btn-success': display.power, 'btn-secondary': !display.power }" data-toggle="button" :aria-pressed="display.power" autocomplete="off" @click="togglePower">
+              {{ display.power ? 'On' : 'Off' }}
+            </button>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-3 mb-2">
+            Brightness
+          </div>
+          <div class="col-9 mb-2">
+            <vue-slider v-model="display.brightness" :min="display.minBrightness" :max="display.maxBrightness" @callback="changeBrightness" ></vue-slider>
+          </div>
         </div>
       </div>
     </div>
@@ -82,19 +97,6 @@ export default {
     this.interval = null
   },
   methods: {
-    isEffectSelected: (effect, c) => effect === c,
-    changeEffect: function (effect) { // This has to be a regular function and not an arrow function!
-      if (effect === this.current) return
-      http.post('effect', {
-        current: effect
-      })
-        .then(response => {
-          this.current = effect
-        })
-        .catch(error => {
-          console.log(error)
-        })
-    },
     getDisplay () {
       if (this.displayPending) return
       this.displayPending = true
@@ -108,6 +110,31 @@ export default {
           this.displayPending = false
         })
     },
+    togglePower () {
+      let power = !this.display.power
+      http.post('display', {
+        power: power
+      })
+        .then((response) => {
+          this.display.power = power
+        })
+        .catch((error) => {
+          console.log(error)
+        })
+    },
+    changeBrightness: _.debounce(function (value) {
+      http.post('display', {
+        brightness: value,
+        power: true
+      })
+        .then(response => {
+          this.display.brightness = value
+          this.display.power = true
+        })
+        .catch(error => {
+          console.log(error)
+        })
+    }, 100),
     getEffects () {
       if (this.effectsPending) return
       this.effectsPending = true
@@ -122,17 +149,19 @@ export default {
           this.effectsPending = false
         })
     },
-    changeBrightness: _.debounce(function (value) {
-      http.post('display', {
-        brightness: value
+    isEffectSelected: (effect, c) => effect === c,
+    changeEffect (effect) {
+      if (effect === this.current) return
+      http.post('effect', {
+        current: effect
       })
         .then(response => {
-          this.brightness = value
+          this.current = effect
         })
         .catch(error => {
           console.log(error)
         })
-    }, 100)
+    }
   }
 }
 

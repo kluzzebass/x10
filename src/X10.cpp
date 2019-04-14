@@ -21,12 +21,14 @@ void X10::begin()
 	SPIFFS.begin();
 	readSettings();
 
-	beginMatrix(0);
-	beginSD(1);
-	beginConfig(2);
-	beginRTC(3);
-	beginWifi(4);
-	beginWeb(5);
+	int stage = 0;
+	beginMatrix(stage++);
+	beginSD(stage++);
+	beginConfig(stage++);
+	beginRTC(stage++);
+	beginWifi(stage++);
+	beginOTA(stage++);
+	beginWeb(stage++);
 
 	// Set up the Clock Effect
 	clock = new X10_Clock(leds, s, rtc);
@@ -58,11 +60,31 @@ void X10::begin()
 	clear();
 	leds->Show();
 
+	// Switching on the effect engine
+	power = true;
+	switchPower = true;
+
 	s.println(F("X10 initialization complete."));
 }
 
 void X10::loop()
 {
+	ArduinoOTA.handle();
+
+	// Check if the display has been powered on or off
+	if (switchPower != power) {
+		power = switchPower;
+
+		if (!power) {
+			clear();
+			leds->Show();
+		}
+	}
+
+	// If the display is not on, do nothing
+	if (!power) return;
+
+	// Which effect is currently running?
 	switch (currentEffect)
 	{
 		case 1:
@@ -184,7 +206,7 @@ void X10::beginRTC(int x)
 	// If RTC is invalid, set the time to compile time.
 	RtcDateTime compiled = RtcDateTime(__DATE__, __TIME__);
 
-	if (!rtc.IsDateTimeValid()) 
+	if (!rtc.IsDateTimeValid())
 	{
 		s.println(F("RTC: Invalid time, setting clock to compile time."));
 		rtc.SetDateTime(compiled);
@@ -235,14 +257,14 @@ void X10::beginConfig(int x)
 	if (!ini.open()) {
 		s.println(F("CFG: Unable to open config file!"));
 		bootStatus(x, 100, 0, 0);
-		return;		
+		return;
 	}
 
 	if (!ini.validate(buffer, BUFFER_LEN)) {
 		s.print(F("CFG: Error validating config, error: "));
 		s.println(ini.getError());
 		bootStatus(x, 100, 0, 0);
-		return;		
+		return;
 	}
 
 	// Net
@@ -296,7 +318,7 @@ void X10::beginConfig(int x)
 	if (!ini.getValue(animator, "animCfgFile", buffer, BUFFER_LEN)) {
 		cfg.animCfgFile = strdup(buffer);
 	}
-	
+
 	s.println(F("CFG: Done."));
 	bootStatus(x, 0, 100, 0);
 }
@@ -310,7 +332,7 @@ void X10::beginWifi(int x)
 	WiFi.mode(WIFI_STA);
 
 	// Static IP? All three addresses need to be filled in.
-	if (cfg.ip != 0 && cfg.gateway != 0 && cfg.netmask != 0)
+	if ((uint32_t)cfg.ip != 0 && (uint32_t)cfg.gateway != 0 && (uint32_t)cfg.netmask != 0)
 	{
 		s.print(F("Wifi: Setting static ip: "));
 		s.println(cfg.ip);
@@ -329,8 +351,42 @@ void X10::beginWifi(int x)
 	bootStatus(x, 0, 100, 0);
 }
 
+void X10::beginOTA(int x)
+{
+	s.println(F("OTA: Initializing..."));
+	bootStatus(x, 100, 0, 100);
+
+  ArduinoOTA.onStart([]() {
+    Serial.println("OTA: Start");
+  });
+
+  ArduinoOTA.onEnd([]() {
+    Serial.println("\nOTA: End");
+  });
+
+  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+    Serial.printf("OTA: Progress: %u%%\r", (progress / (total / 100)));
+  });
+
+  ArduinoOTA.onError([](ota_error_t error) {
+    Serial.printf("OTA: Error[%u]: ", error);
+    if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
+    else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
+    else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
+    else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
+    else if (error == OTA_END_ERROR) Serial.println("End Failed");
+  });
+
+  ArduinoOTA.begin();
+
+	s.println(F("OTA: Done."));
+	bootStatus(x, 0, 100, 0);
+}
+
+
 void X10::beginWeb(int x)
 {
+	s.println(F("Web: Initializing..."));
 	String jsons = ".json";
 	String txts = ".txt";
 	jsonm = mimeTypeIndex(jsons);
@@ -352,6 +408,19 @@ void X10::beginWeb(int x)
 
 	s.println(F("Web: Done."));
 	bootStatus(x, 0, 100, 0);
+}
+
+bool X10::setPower(bool on)
+{
+	if (power != on) {
+		s.print(F("Switching display: "));
+		s.println(on ? F("on") : F("off"));
+
+		// This will be picked up by the main loop()
+		switchPower = on;
+	}
+
+	return true;
 }
 
 bool X10::setBrightness(uint8_t brightness)
@@ -387,23 +456,24 @@ bool X10::switchEffect(uint8_t effect)
 
 
 
+
 /*
  *
- * 
- * 
- * 
- * 
- * 
- * 
- * 
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  * 												WEB
- * 
- * 
- * 
- * 
- * 
- * 
- * 
+ *
+ *
+ *
+ *
+ *
+ *
+ *
  */
 
 void X10::registerWebHandlers() {
@@ -426,6 +496,8 @@ void X10::registerWebHandlers() {
 		msg += cfg.maxBrightness;
 		msg += ",\"minBrightness\":";
 		msg += cfg.minBrightness;
+		msg += ",\"power\":";
+		msg += power ? "true" : "false";
 		msg += "}\n";
 
 		request->send(200, mimeTypes[jsonm].subtype, msg);
@@ -541,20 +613,25 @@ void X10::registerWebHandlers() {
 	});
 
 	// curl -s -X POST -H "Content-Type: application/json" -d '{"brightness":50}' http://x10/api/display
+	// curl -s -X POST -H "Content-Type: application/json" -d '{"power":false}' http://x10/api/display
 	srv->addHandler(new AsyncCallbackJsonWebHandler("/api/display", [&](AsyncWebServerRequest *request, JsonVariant &json) {
-		JsonObject& root = json.as<JsonObject>();
-		int brightness;
+		JsonObject& obj = json.as<JsonObject>();
 		switch (request->method()) {
 			case HTTP_POST:
-				if (!root.success()) {
+				if (!obj.success()) {
 					jsonBadRequest(request);
 					break;
 				}
-				brightness = root[F("brightness")];
 
-				if (!setBrightness(brightness)) {
-					jsonBadRequest(request);
-					break;
+				if (obj.containsKey(F("brightness"))) {
+					if (!setBrightness(obj[F("brightness")])) {
+						jsonBadRequest(request);
+						break;
+					}
+				}
+
+				if (obj.containsKey(F("power"))) {
+					setPower(obj[F("power")]);
 				}
 
 				writeSettings();
@@ -563,20 +640,20 @@ void X10::registerWebHandlers() {
 			default:
 				jsonNotFound(request);
 				break;
-		}	
+		}
 	}));
 
 	// curl -s -X POST -H "Content-Type: application/json" -d '{"current":1}' http://x10/api/effect | jq .
 	srv->addHandler(new AsyncCallbackJsonWebHandler("/api/effect", [&](AsyncWebServerRequest *request, JsonVariant &json) {
-		JsonObject& root = json.as<JsonObject>();
+		JsonObject& obj = json.as<JsonObject>();
 		int effect;
 		switch (request->method()) {
 			case HTTP_POST:
-				if (!root.success()) {
+				if (!obj.success()) {
 					jsonBadRequest(request);
 					break;
 				}
-				effect = root[F("current")];
+				effect = obj[F("current")];
 
 				if (!switchEffect(effect)) {
 					jsonBadRequest(request);
@@ -589,33 +666,33 @@ void X10::registerWebHandlers() {
 			default:
 				jsonNotFound(request);
 				break;
-		}	
+		}
 	}));
 
 	// curl -s -X POST -H "Content-Type: application/json" -d '{"date":"Nov 25 2017","time":"18:28:45"}' http://x10/api/datetime | jq .
 	srv->addHandler(new AsyncCallbackJsonWebHandler("/api/datetime", [&](AsyncWebServerRequest *request, JsonVariant &json) {
-		JsonObject& root = json.as<JsonObject>();
+		JsonObject& obj = json.as<JsonObject>();
 		switch (request->method()) {
 			case HTTP_POST:
-				if (!root.success()) {
+				if (!obj.success()) {
 					jsonBadRequest(request);
 					break;
 				}
 
-				if (root.containsKey("date") && root.containsKey("time"))
+				if (obj.containsKey("date") && obj.containsKey("time"))
 				{
-					if (!root["date"].is<const char*>()) {
+					if (!obj["date"].is<const char*>()) {
 						jsonBadRequest(request);
 						break;
 					}
 
-					if (!root["time"].is<const char*>()) {
+					if (!obj["time"].is<const char*>()) {
 						jsonBadRequest(request);
 						break;
 					}
 
-					String d = root[F("date")].as<char*>();
-					String t = root[F("time")].as<char*>();
+					String d = obj[F("date")].as<char*>();
+					String t = obj[F("time")].as<char*>();
 
 					RtcDateTime compiled = RtcDateTime(d.c_str(), t.c_str());
 					rtc.SetDateTime(compiled);
@@ -630,7 +707,7 @@ void X10::registerWebHandlers() {
 			default:
 				jsonNotFound(request);
 				break;
-		}	
+		}
 	}));
 
 	// curl -s -X POST -H "Content-Type: application/json" -d '{"randomize":true}' http://x10/api/animator | jq .
@@ -638,23 +715,23 @@ void X10::registerWebHandlers() {
 	// curl -s -X POST -H "Content-Type: application/json" -d '{"next":true}' http://x10/api/animator | jq .
 	// curl -s -X POST -H "Content-Type: application/json" -d '{"next":""}' http://x10/api/animator | jq .
 	srv->addHandler(new AsyncCallbackJsonWebHandler("/api/animator", [&](AsyncWebServerRequest *request, JsonVariant &json) {
-		JsonObject& root = json.as<JsonObject>();
+		JsonObject& obj = json.as<JsonObject>();
 		switch (request->method()) {
 			case HTTP_POST:
-				if (!root.success()) {
+				if (!obj.success()) {
 					jsonBadRequest(request);
 					break;
 				}
-				if (root.containsKey("next"))
+				if (obj.containsKey("next"))
 				{
-					if (root["next"].is<bool>())
+					if (obj["next"].is<bool>())
 					{
-						bool next = root[F("next")];
+						bool next = obj[F("next")];
 						if (next) animator->next();
 					}
-					else if (root["next"].is<const char *>())
+					else if (obj["next"].is<const char *>())
 					{
-						const char *next = root[F("next")];
+						const char *next = obj[F("next")];
 						if (!animator->next(next)) {
 							jsonNotFound(request);
 							break;
@@ -666,23 +743,23 @@ void X10::registerWebHandlers() {
 					}
 				}
 
-				if (root.containsKey("randomize"))
+				if (obj.containsKey("randomize"))
 				{
-					if (!root["randomize"].is<bool>()) {
+					if (!obj["randomize"].is<bool>()) {
 						jsonNotFound(request);
 						break;
 					}
-					bool randomize = root[F("randomize")];
+					bool randomize = obj[F("randomize")];
 					animator->setRandomize(randomize);
 				}
 
-				if (root.containsKey("cycle"))
+				if (obj.containsKey("cycle"))
 				{
-					if (!root["cycle"].is<int>()) {
+					if (!obj["cycle"].is<int>()) {
 						jsonNotFound(request);
 						break;
 					}
-					uint8_t cycle = root[F("cycle")];
+					uint8_t cycle = obj[F("cycle")];
 					animator->setCycle(cycle);
 				}
 				writeSettings();
@@ -691,36 +768,36 @@ void X10::registerWebHandlers() {
 			default:
 				jsonNotFound(request);
 				break;
-		}	
+		}
 	}));
 
 	// curl -s -X POST -H "Content-Type: application/json" -d '{"randomize":true,"changeRate":15}' http://x10/api/wibblewobble | jq .
 	srv->addHandler(new AsyncCallbackJsonWebHandler("/api/wibblewobble", [&](AsyncWebServerRequest *request, JsonVariant &json) {
-		JsonObject& root = json.as<JsonObject>();
+		JsonObject& obj = json.as<JsonObject>();
 		switch (request->method()) {
 			case HTTP_POST:
-				if (!root.success()) {
+				if (!obj.success()) {
 					jsonBadRequest(request);
 					break;
 				}
 
-				if (root.containsKey("changeRate"))
+				if (obj.containsKey("changeRate"))
 				{
-					if (!root["changeRate"].is<uint16_t>()) {
+					if (!obj["changeRate"].is<uint16_t>()) {
 						jsonBadRequest(request);
 						break;
 					}
-					uint16_t w = root[F("changeRate")];
+					uint16_t w = obj[F("changeRate")];
 					wibbleWobble->changeRate(w);
 				}
 
-				if (root.containsKey("wibbleX"))
+				if (obj.containsKey("wibbleX"))
 				{
-					if (!root["wibbleX"].is<uint16_t>()) {
+					if (!obj["wibbleX"].is<uint16_t>()) {
 						jsonBadRequest(request);
 						break;
 					}
-					uint16_t w = root[F("wibbleX")];
+					uint16_t w = obj[F("wibbleX")];
 					if (w > WIBBLE_RANGE) {
 						jsonBadRequest(request);
 						break;
@@ -728,13 +805,13 @@ void X10::registerWebHandlers() {
 					wibbleWobble->wibbleX(w);
 				}
 
-				if (root.containsKey("wibbleY"))
+				if (obj.containsKey("wibbleY"))
 				{
-					if (!root["wibbleY"].is<uint16_t>()) {
+					if (!obj["wibbleY"].is<uint16_t>()) {
 						jsonBadRequest(request);
 						break;
 					}
-					uint16_t w = root[F("wibbleY")];
+					uint16_t w = obj[F("wibbleY")];
 					if (w > WIBBLE_RANGE) {
 						jsonBadRequest(request);
 						break;
@@ -742,13 +819,13 @@ void X10::registerWebHandlers() {
 					wibbleWobble->wibbleY(w);
 				}
 
-				if (root.containsKey("wobbleX"))
+				if (obj.containsKey("wobbleX"))
 				{
-					if (!root["wobbleX"].is<uint16_t>()) {
+					if (!obj["wobbleX"].is<uint16_t>()) {
 						jsonBadRequest(request);
 						break;
 					}
-					uint16_t w = root[F("wobbleX")];
+					uint16_t w = obj[F("wobbleX")];
 					if (w > WOBBLE_RANGE) {
 						jsonBadRequest(request);
 						break;
@@ -756,13 +833,13 @@ void X10::registerWebHandlers() {
 					wibbleWobble->wobbleX(w);
 				}
 
-				if (root.containsKey("wobbleY"))
+				if (obj.containsKey("wobbleY"))
 				{
-					if (!root["wobbleY"].is<uint16_t>()) {
+					if (!obj["wobbleY"].is<uint16_t>()) {
 						jsonBadRequest(request);
 						break;
 					}
-					uint16_t w = root[F("wobbleY")];
+					uint16_t w = obj[F("wobbleY")];
 					if (w > WOBBLE_RANGE) {
 						jsonBadRequest(request);
 						break;
@@ -770,13 +847,13 @@ void X10::registerWebHandlers() {
 					wibbleWobble->wobbleY(w);
 				}
 
-				if (root.containsKey("randomize"))
+				if (obj.containsKey("randomize"))
 				{
-					if (!root["randomize"].is<bool>()) {
+					if (!obj["randomize"].is<bool>()) {
 						jsonBadRequest(request);
 						break;
 					}
-					bool w = root[F("randomize")];
+					bool w = obj[F("randomize")];
 					if (w) wibbleWobble->randomize();
 				}
 
@@ -786,7 +863,7 @@ void X10::registerWebHandlers() {
 			default:
 				jsonNotFound(request);
 				break;
-		}	
+		}
 	}));
 
 
@@ -825,7 +902,7 @@ void X10::registerWebHandlers() {
 			path.remove(0, 1);
 
 
-		int m = mimeTypeIndex(path);	
+		int m = mimeTypeIndex(path);
 		s.print(F("Web: mime-type = "));
 		s.println(mimeTypes[m].subtype);
 
