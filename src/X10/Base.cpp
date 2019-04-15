@@ -16,7 +16,7 @@ uint16_t X10_Base::xy(uint8_t x, uint8_t y)
 	{
 		i = (y * WIDTH) + x;
 	}
-  
+
 	return i;
 }
 
@@ -121,4 +121,29 @@ void X10_Base::drawFrame(BMPReader &bmp, int16_t x, int16_t y)
 	}
 }
 
+void X10_Base::drawStatus(Status status, RgbColor col)
+{
+	RgbColor black = RgbColor(0, 0, 0);
+	for (int y = 0; y < HEIGHT; y++) {
+		uint16_t line = statusBitmaps[(int)status][y];
 
+		for (int x = 0; x < WIDTH; x++) {
+			bool show = line >> (15 - x) & 1;
+			leds->SetPixelColor(xy(x, y), show ? col : black);
+		}
+	}
+	leds->Show();
+}
+
+void X10_Base::status(Status status, RgbColor from, RgbColor to, uint32_t fadeTime)
+{
+	uint32_t then = millis();
+	uint32_t now = then;
+
+	while ((now = millis()) < (then + fadeTime)) {
+		float progress = (float)(now - then) / (float)fadeTime;
+		RgbColor col = RgbColor::LinearBlend(from, to, progress);
+		drawStatus(status, col);
+		delay(10); // Yield control for a bit
+	}
+}

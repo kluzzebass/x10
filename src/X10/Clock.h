@@ -23,15 +23,15 @@ public:
 	void loop();
 
 protected:
-	bool hiLite(uint, uint, uint);
-	void drawDigit(uint, uint, uint);
-	void drawSeconds(uint);
+	void drawDigit(uint digit, uint xPos, uint yPos);
+	bool hiLite(uint digit, uint x, uint y);
+	void drawSeconds(uint seconds);
 
 	RtcDS1307<TwoWire> &rtc;
 
 	uint seconds;
-	uint minutesLo; 
-	uint minutesHi; 
+	uint minutesLo;
+	uint minutesHi;
 	uint hoursLo;
 	uint hoursHi;
 

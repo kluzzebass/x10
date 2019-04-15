@@ -64,6 +64,15 @@ void X10::begin()
 	power = true;
 	switchPower = true;
 
+	// Flash X10 for a bit
+	int fadeSpeed = 200;
+	status(Status::X10, RgbColor(0, 0, 0), RgbColor(255, 255, 0), fadeSpeed);
+	for (int i = 0; i < 5; i++) {
+		status(Status::X10, RgbColor(255, 255, 0), RgbColor(255, 0, 0), fadeSpeed);
+		status(Status::X10, RgbColor(255, 0, 0), RgbColor(255, 255, 0), fadeSpeed);
+	}
+	status(Status::X10, RgbColor(255, 255, 0), RgbColor(0, 0, 0), fadeSpeed);
+
 	s.println(F("X10 initialization complete."));
 }
 
@@ -114,14 +123,6 @@ void X10::loop()
 	}
 	initializePlz = false;
 }
-
-
-void X10::bootStatus(int x, uint8_t r, uint8_t g, uint8_t b)
-{
-	leds->SetPixelColor(xy(x, 0), RgbColor(r, g, b));
-	leds->Show();
-}
-
 
 void X10::writeSettings()
 {
@@ -193,13 +194,17 @@ void X10::beginMatrix(int x)
 
 	leds->Begin();
 
+	status(Status::LEDS, RgbColor(0, 0, 0), RgbColor(0, 255, 0), STATUS_FADE_SPEED);
+	status(Status::LEDS, RgbColor(0, 255, 0), RgbColor(0, 0, 0), STATUS_FADE_SPEED);
+
 	s.println(F("Matrix: Done."));
-	bootStatus(x, 0, 100, 0);
 }
 
 void X10::beginRTC(int x)
 {
 	s.println(F("RTC: Initializing..."));
+
+	status(Status::RTC, RgbColor(0, 0, 0), RgbColor(255, 255, 0), STATUS_FADE_SPEED);
 
 	rtc.Begin();
 
@@ -220,24 +225,27 @@ void X10::beginRTC(int x)
 
 	rtc.SetSquareWavePin(DS1307SquareWaveOut_Low);
 
+	status(Status::RTC, RgbColor(255, 255, 0), RgbColor(0, 255, 0), STATUS_FADE_SPEED);
+	status(Status::RTC, RgbColor(0, 255, 0), RgbColor(0, 0, 0), STATUS_FADE_SPEED);
+
 	s.println(F("RTC: Done."));
-	bootStatus(x, 0, 100, 0);
 }
 
 void X10::beginSD(int x)
 {
 	s.println(F("SD: Initializing card..."));
-	bootStatus(x, 100, 0, 100);
+	status(Status::SD, RgbColor(0, 0, 0), RgbColor(255, 255, 0), STATUS_FADE_SPEED);
 
 	if (!SD.begin(CS_PIN, SPI_SPEED))
 	{
 		s.println(F("SD: Failed!"));
-		bootStatus(x, 100, 0, 0);
+		status(Status::CFG, RgbColor(255, 255, 0), RgbColor(255, 0, 0), STATUS_FADE_SPEED);
 		return;
 	}
 
+	status(Status::SD, RgbColor(255, 255, 0), RgbColor(0, 255, 0), STATUS_FADE_SPEED);
+	status(Status::SD, RgbColor(0, 255, 0), RgbColor(0, 0, 0), STATUS_FADE_SPEED);
 	s.println(F("SD: Done."));
-	bootStatus(x, 0, 100, 0);
 }
 
 void X10::beginConfig(int x)
@@ -249,21 +257,21 @@ void X10::beginConfig(int x)
 	const char *animator = "animator";
 
 	s.println(F("CFG: Reading config file..."));
-	bootStatus(x, 100, 0, 100);
+	status(Status::CFG, RgbColor(0, 0, 0), RgbColor(255, 255, 0), STATUS_FADE_SPEED);
 
 	SD.chdir(X10_CFG_DIR);
 	IniFile ini(X10_CFG_FILE);
 
 	if (!ini.open()) {
 		s.println(F("CFG: Unable to open config file!"));
-		bootStatus(x, 100, 0, 0);
+		status(Status::CFG, RgbColor(255, 255, 0), RgbColor(255, 0, 0), STATUS_FADE_SPEED);
 		return;
 	}
 
 	if (!ini.validate(buffer, BUFFER_LEN)) {
 		s.print(F("CFG: Error validating config, error: "));
 		s.println(ini.getError());
-		bootStatus(x, 100, 0, 0);
+		status(Status::CFG, RgbColor(255, 255, 0), RgbColor(255, 0, 0), STATUS_FADE_SPEED);
 		return;
 	}
 
@@ -271,14 +279,14 @@ void X10::beginConfig(int x)
 
 	if (!ini.getValue(net, "ssid", buffer, BUFFER_LEN)) {
 		s.println(F("CFG: Error reading wifi ssid!"));
-		bootStatus(x, 100, 0, 0);
+		status(Status::CFG, RgbColor(255, 255, 0), RgbColor(255, 0, 0), STATUS_FADE_SPEED);
 		return;
 	}
 	cfg.wifiSSID = strdup(buffer);
 
 	if (!ini.getValue(net, "psk", buffer, BUFFER_LEN)) {
 		s.println(F("CFG: Error reading wifi psk!"));
-		bootStatus(x, 100, 0, 0);
+		status(Status::CFG, RgbColor(255, 255, 0), RgbColor(255, 0, 0), STATUS_FADE_SPEED);
 		return;
 	}
 	cfg.wifiPSK = strdup(buffer);
@@ -319,15 +327,17 @@ void X10::beginConfig(int x)
 		cfg.animCfgFile = strdup(buffer);
 	}
 
+	status(Status::CFG, RgbColor(255, 255, 0), RgbColor(0, 255, 0), STATUS_FADE_SPEED);
+	status(Status::CFG, RgbColor(0, 255, 0), RgbColor(0, 0, 0), STATUS_FADE_SPEED);
+
 	s.println(F("CFG: Done."));
-	bootStatus(x, 0, 100, 0);
 }
 
 
 void X10::beginWifi(int x)
 {
 	s.println(F("Wifi: Initializing..."));
-	bootStatus(x, 100, 0, 100);
+	status(Status::WIFI, RgbColor(0, 0, 0), RgbColor(255, 255, 0), STATUS_FADE_SPEED);
 
 	WiFi.mode(WIFI_STA);
 
@@ -339,54 +349,73 @@ void X10::beginWifi(int x)
 		WiFi.config(cfg.ip, cfg.gateway, cfg.netmask);
 	}
 
+	s.print(F("Wifi: SSID: "));
+	s.println(cfg.wifiSSID);
+
+	s.print(F("Wifi: PSK: "));
+	s.println(cfg.wifiPSK);
+
 	WiFi.begin(cfg.wifiSSID, cfg.wifiPSK);
 
 	while (WiFi.status() != WL_CONNECTED) {
+		s.println(F("Wifi: Not connected yet, retrying in 500ms."));
 		delay(500);
 	}
 
 	s.print(F("Wifi: Connected, address: "));
 	s.println(WiFi.localIP());
+
+	status(Status::WIFI, RgbColor(255, 255, 0), RgbColor(0, 255, 0), STATUS_FADE_SPEED);
+	status(Status::WIFI, RgbColor(0, 255, 0), RgbColor(0, 0, 0), STATUS_FADE_SPEED);
+
 	s.println(F("Wifi: Done."));
-	bootStatus(x, 0, 100, 0);
 }
 
 void X10::beginOTA(int x)
 {
 	s.println(F("OTA: Initializing..."));
-	bootStatus(x, 100, 0, 100);
+	status(Status::OTA, RgbColor(0, 0, 0), RgbColor(255, 255, 0), STATUS_FADE_SPEED);
 
-  ArduinoOTA.onStart([]() {
-    Serial.println("OTA: Start");
-  });
+	ArduinoOTA.onStart([this]() {
+		Serial.println("OTA: Start");
+		status(Status::OTA, RgbColor(0, 0, 0), RgbColor(0, 0, 255), STATUS_FADE_SPEED);
+	});
 
-  ArduinoOTA.onEnd([]() {
-    Serial.println("\nOTA: End");
-  });
+	ArduinoOTA.onEnd([this]() {
+		Serial.println("\nOTA: End");
+		status(Status::OTA, RgbColor(0, 0, 255), RgbColor(0, 255, 0), STATUS_FADE_SPEED);
+	});
 
-  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-    Serial.printf("OTA: Progress: %u%%\r", (progress / (total / 100)));
-  });
+	ArduinoOTA.onProgress([this](unsigned int progress, unsigned int total) {
+		uint percent = (progress / (total / 100));
+		Serial.printf("OTA: Progress: %u%%\r", percent);
+	});
 
-  ArduinoOTA.onError([](ota_error_t error) {
-    Serial.printf("OTA: Error[%u]: ", error);
-    if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
-    else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
-    else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
-    else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
-    else if (error == OTA_END_ERROR) Serial.println("End Failed");
-  });
+	ArduinoOTA.onError([this](ota_error_t error) {
+		Serial.printf("OTA: Error[%u]: ", error);
+		leds->ClearTo(RgbColor(100, 0, 0));;
+		leds->Show();
+		if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
+		else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
+		else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
+		else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
+		else if (error == OTA_END_ERROR) Serial.println("End Failed");
+	});
 
-  ArduinoOTA.begin();
+	ArduinoOTA.begin();
+
+	status(Status::OTA, RgbColor(255, 255, 0), RgbColor(0, 255, 0), STATUS_FADE_SPEED);
+	status(Status::OTA, RgbColor(0, 255, 0), RgbColor(0, 0, 0), STATUS_FADE_SPEED);
 
 	s.println(F("OTA: Done."));
-	bootStatus(x, 0, 100, 0);
 }
 
 
 void X10::beginWeb(int x)
 {
 	s.println(F("Web: Initializing..."));
+	status(Status::WEB, RgbColor(0, 0, 0), RgbColor(255, 255, 0), STATUS_FADE_SPEED);
+
 	String jsons = ".json";
 	String txts = ".txt";
 	jsonm = mimeTypeIndex(jsons);
@@ -406,8 +435,10 @@ void X10::beginWeb(int x)
 	registerWebHandlers();
 	srv->begin();
 
+	status(Status::WEB, RgbColor(255, 255, 0), RgbColor(0, 255, 0), STATUS_FADE_SPEED);
+	status(Status::WEB, RgbColor(0, 255, 0), RgbColor(0, 0, 0), STATUS_FADE_SPEED);
+
 	s.println(F("Web: Done."));
-	bootStatus(x, 0, 100, 0);
 }
 
 bool X10::setPower(bool on)
@@ -454,9 +485,6 @@ bool X10::switchEffect(uint8_t effect)
 }
 
 
-
-
-
 /*
  *
  *
@@ -476,7 +504,8 @@ bool X10::switchEffect(uint8_t effect)
  *
  */
 
-void X10::registerWebHandlers() {
+void X10::registerWebHandlers()
+{
 
 	// Deal with CORS
 	DefaultHeaders::Instance().addHeader("Access-Control-Allow-Origin", "*");

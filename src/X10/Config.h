@@ -13,6 +13,8 @@
 #define MIN_BRIGHTNESS 10
 #define DEFAULT_EFFECT 1
 
+#define STATUS_FADE_SPEED 100
+
 #define CS_PIN D8
 #define SPI_SPEED SPI_FULL_SPEED
 
