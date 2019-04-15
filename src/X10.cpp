@@ -393,8 +393,7 @@ void X10::beginOTA(int x)
 
 	ArduinoOTA.onError([this](ota_error_t error) {
 		Serial.printf("OTA: Error[%u]: ", error);
-		leds->ClearTo(RgbColor(100, 0, 0));;
-		leds->Show();
+		status(Status::OTA, RgbColor(0, 0, 255), RgbColor(255, 0, 0), STATUS_FADE_SPEED);
 		if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
 		else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
 		else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
